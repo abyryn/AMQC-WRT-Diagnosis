@@ -1,0 +1,192 @@
+{
+  "version": "2.0",
+  "description": "Honda PGM-FI Sensor Specifications — Layer 2 Knowledge Base",
+  "sensors": {
+    "RPM": {
+      "name": "Engine Speed (RPM)",
+      "sensor_type": "Crankshaft Position Sensor (CKP)",
+      "pin_ecu": "CKP",
+      "unit": "rpm",
+      "range_min": 0,
+      "range_max": 15000,
+      "normal_idle_min": 1300,
+      "normal_idle_max": 1500,
+      "fault_values": [0],
+      "fault_description": "0 RPM = tidak ada sinyal CKP / mesin mati",
+      "reference_voltage": null,
+      "interpretation": {
+        "below_normal": "RPM terlalu rendah bisa menandakan masalah idle control, sensor CKP lemah, atau mesin hampir mati",
+        "above_normal": "RPM terlalu tinggi di idle bisa disebabkan kebocoran udara intake, IACV bermasalah, atau kabel gas tersangkut",
+        "at_fault": "RPM = 0 saat mesin seharusnya hidup menunjukkan sinyal CKP hilang total"
+      }
+    },
+    "TPS": {
+      "name": "Throttle Position Sensor",
+      "sensor_type": "Potentiometer / Hall Effect",
+      "pin_ecu": "TP",
+      "unit": "V",
+      "range_min": 0.3,
+      "range_max": 4.7,
+      "normal_idle_min": 0.3,
+      "normal_idle_max": 0.8,
+      "fault_values": [0, 5],
+      "fault_description": "< 0.2V (short to ground) atau > 4.8V (open / short to 5V)",
+      "reference_voltage": 5.0,
+      "interpretation": {
+        "below_normal": "TPS < 0.3V saat throttle tertutup → kemungkinan sensor short circuit ke ground",
+        "above_normal": "TPS > 0.8V saat throttle tertutup → kabel gas tidak kembali sempurna, atau sensor tidak terkalibrasi",
+        "at_fault": "TPS 0V = sensor short, TPS 5V = sensor open circuit"
+      }
+    },
+    "MAP": {
+      "name": "Manifold Absolute Pressure",
+      "sensor_type": "Piezoresistive Pressure Sensor",
+      "pin_ecu": "MAP",
+      "unit": "kPa",
+      "range_min": 0,
+      "range_max": 100,
+      "normal_idle_min": 25,
+      "normal_idle_max": 35,
+      "fault_values": [0, 100],
+      "fault_description": "0 kPa (sensor fault / no vacuum) atau stuck di 100 kPa (no vacuum signal)",
+      "reference_voltage": 5.0,
+      "interpretation": {
+        "below_normal": "MAP < 25 kPa di idle = vacuum terlalu tinggi (bisa normal jika mesin baru service)",
+        "above_normal": "MAP > 35 kPa di idle = vacuum rendah, kemungkinan kebocoran udara intake atau piston ring aus",
+        "at_fault": "MAP 0 kPa = sensor fault / short. MAP stuck 100 kPa = hose vacuum bocor/lepas"
+      }
+    },
+    "IAT": {
+      "name": "Intake Air Temperature",
+      "sensor_type": "NTC Thermistor",
+      "pin_ecu": "TA",
+      "unit": "°C",
+      "range_min": -40,
+      "range_max": 120,
+      "normal_idle_min": 25,
+      "normal_idle_max": 40,
+      "fault_values": [-40, 120],
+      "fault_description": "-40°C = open circuit (resistansi tak terhingga). 120°C palsu = short circuit",
+      "reference_voltage": 5.0,
+      "resistance_table": {
+        "-40": "100kΩ",
+        "-20": "28kΩ",
+        "0": "9.4kΩ",
+        "20": "3.5kΩ",
+        "25": "2.4kΩ",
+        "40": "1.2kΩ",
+        "60": "0.5kΩ",
+        "80": "0.25kΩ",
+        "100": "0.13kΩ",
+        "120": "0.08kΩ"
+      },
+      "interpretation": {
+        "below_normal": "IAT < 25°C bisa normal di pagi hari atau cuaca dingin",
+        "above_normal": "IAT > 45°C di idle → udara masuk terlalu panas, periksa airbox dekat mesin panas",
+        "at_fault": "-40°C = sensor open circuit (konektor lepas / kabel putus). Suhu ambient tidak mungkin -40°C di Indonesia"
+      }
+    },
+    "ECT": {
+      "name": "Engine Coolant Temperature",
+      "sensor_type": "NTC Thermistor",
+      "pin_ecu": "TW",
+      "unit": "°C",
+      "range_min": -40,
+      "range_max": 130,
+      "normal_idle_min": 75,
+      "normal_idle_max": 95,
+      "fault_values": [-40, 130],
+      "fault_description": "-40°C = open circuit. > 120°C = overheating atau sensor short",
+      "reference_voltage": 5.0,
+      "resistance_table": {
+        "-40": "100kΩ",
+        "-20": "28kΩ",
+        "0": "9.4kΩ",
+        "20": "3.5kΩ",
+        "40": "1.2kΩ",
+        "60": "0.5kΩ",
+        "80": "0.3kΩ",
+        "100": "0.18kΩ",
+        "120": "0.1kΩ"
+      },
+      "interpretation": {
+        "below_normal": "ECT < 75°C = mesin belum panas. Normal jika baru dihidupkan < 10 menit",
+        "above_normal": "ECT > 100°C = overheating! Periksa coolant level, kipas radiator, thermostat",
+        "at_fault": "-40°C = sensor open circuit. > 120°C = overheating berbahaya atau sensor short"
+      }
+    },
+    "O2": {
+      "name": "Oxygen Sensor (Lambda)",
+      "sensor_type": "Zirconia O2 Sensor (Heated)",
+      "pin_ecu": "HO2S",
+      "unit": "V",
+      "range_min": 0.1,
+      "range_max": 0.9,
+      "normal_idle_min": 0.4,
+      "normal_idle_max": 0.6,
+      "fault_values": [0, 1],
+      "fault_description": "< 0.1V (lean stuck / sensor rusak) atau stuck > 0.9V (rich stuck)",
+      "reference_voltage": null,
+      "interpretation": {
+        "below_normal": "O2 < 0.4V = campuran BBM cenderung kurus (lean). Jika stuck < 0.1V → sensor rusak",
+        "above_normal": "O2 > 0.6V = campuran BBM cenderung kaya (rich). Jika stuck > 0.9V → sensor rusak atau injektor bocor",
+        "at_fault": "O2 sensor seharusnya berfluktuasi antara 0.1-0.9V dalam closed loop. Jika stuck = sensor rusak",
+        "normal_behavior": "Pada closed loop, O2 sensor harus berfluktuasi cross-switching antara lean dan rich setiap 1-3 detik"
+      }
+    },
+    "BATTERY": {
+      "name": "Battery / System Voltage",
+      "sensor_type": "Direct Voltage Measurement",
+      "pin_ecu": "VB",
+      "unit": "V",
+      "range_min": 10,
+      "range_max": 16,
+      "normal_idle_min": 13.5,
+      "normal_idle_max": 14.5,
+      "fault_values": [0, 16],
+      "fault_description": "< 11V = aki lemah / charging system gagal. > 15.5V = overcharging",
+      "reference_voltage": null,
+      "interpretation": {
+        "below_normal": "Battery < 13.5V saat mesin hidup → alternator mungkin tidak charging. < 12V mesin mati = aki lemah",
+        "above_normal": "Battery > 14.5V → regulator perlu diperiksa. > 15.5V = OVERCHARGING — bisa merusak ECU!",
+        "at_fault": "Voltage < 10V = aki dead / koneksi putus. > 16V = regulator rusak total, SEGERA MATIKAN MESIN"
+      }
+    },
+    "IACV": {
+      "name": "Idle Air Control Valve Position",
+      "sensor_type": "Stepper Motor / PWM Valve",
+      "pin_ecu": "IACV",
+      "unit": "%",
+      "range_min": 0,
+      "range_max": 100,
+      "normal_idle_min": 30,
+      "normal_idle_max": 60,
+      "fault_values": [0, 100],
+      "fault_description": "0% = valve fully closed (stuck) atau 100% = valve fully open (stuck)",
+      "reference_voltage": null,
+      "interpretation": {
+        "below_normal": "IACV < 30% = ECU mencoba menutup idle air → RPM mungkin terlalu tinggi dari sumber lain (kebocoran udara)",
+        "above_normal": "IACV > 60% = ECU membuka valve lebih banyak untuk menjaga idle → mesin mungkin kesulitan idle",
+        "at_fault": "IACV 0% dan RPM naik = kebocoran udara. IACV 100% dan RPM rendah = valve tidak bisa menambah udara (stuck)"
+      }
+    },
+    "FUEL_TRIM": {
+      "name": "Fuel Trim (Short Term / Long Term)",
+      "sensor_type": "Calculated Value from O2 Feedback",
+      "pin_ecu": "FT",
+      "unit": "%",
+      "range_min": -25,
+      "range_max": 25,
+      "normal_idle_min": -5,
+      "normal_idle_max": 5,
+      "fault_values": [-25, 25],
+      "fault_description": "> +20% = sistem terlalu kurus (ECU menambah BBM). < -20% = sistem terlalu kaya (ECU mengurangi BBM)",
+      "reference_voltage": null,
+      "interpretation": {
+        "below_normal": "Fuel Trim negatif tinggi (< -10%) = campuran terlalu kaya. ECU mengurangi BBM. Periksa injektor bocor, filter udara, fuel pressure",
+        "above_normal": "Fuel Trim positif tinggi (> +10%) = campuran terlalu kurus. ECU menambah BBM. Periksa kebocoran udara intake, fuel delivery",
+        "at_fault": "Fuel Trim mendekati ±25% = ECU sudah mencapai batas kompensasi. Harus diperbaiki karena performa dan emisi terganggu"
+      }
+    }
+  }
+}

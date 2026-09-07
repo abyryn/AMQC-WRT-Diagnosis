@@ -1,0 +1,658 @@
+{
+  "version": "2.0",
+  "description": "Honda PGM-FI DTC Database — Layer 1 Rule Engine",
+  "total_codes": 28,
+  "dtc_database": {
+    "P0107": {
+      "code": "P0107",
+      "name": "MAP Sensor Low Input",
+      "sensor": "MAP",
+      "circuit": "Signal Low / Short to Ground",
+      "normal_range": "0 – 100 kPa",
+      "fault_condition": "Tegangan sinyal MAP < 0.2V selama > 2 detik",
+      "possible_causes": [
+        "Sensor MAP rusak / short circuit",
+        "Konektor MAP kotor atau short ke ground",
+        "Vacuum hose ke MAP bocor / lepas",
+        "Kabel signal MAP putus atau short ke body"
+      ],
+      "check_steps": [
+        "Periksa vacuum hose dari intake manifold ke sensor MAP, pastikan tidak bocor",
+        "Ukur tegangan di pin sinyal MAP sensor (harus 1-4V sesuai tekanan)",
+        "Periksa konektor MAP dari kotoran atau korosi",
+        "Test sensor MAP: saat kunci ON mesin mati, sinyal harus ~4V (tekanan atmosfir)"
+      ],
+      "priority": "high",
+      "mil_status": "on",
+      "related_dtc": ["P0108", "P0171", "P0172"],
+      "system_group": "Fuel"
+    },
+    "P0108": {
+      "code": "P0108",
+      "name": "MAP Sensor High Input",
+      "sensor": "MAP",
+      "circuit": "Signal High / Open",
+      "normal_range": "0 – 100 kPa",
+      "fault_condition": "Tegangan sinyal MAP > 4.8V selama > 2 detik",
+      "possible_causes": [
+        "Sensor MAP rusak / open circuit",
+        "Konektor MAP lepas atau terbuka",
+        "Kabel ground MAP putus",
+        "ECU internal fault pada sirkuit MAP"
+      ],
+      "check_steps": [
+        "Periksa konektor MAP — apakah terpasang dengan baik",
+        "Ukur tegangan sinyal MAP (saat kunci ON, mesin mati harus ~4V)",
+        "Periksa kabel ground MAP sensor, pastikan tidak putus",
+        "Ukur resistansi kabel dari sensor ke ECU, cari kabel putus"
+      ],
+      "priority": "high",
+      "mil_status": "on",
+      "related_dtc": ["P0107", "P0171"],
+      "system_group": "Fuel"
+    },
+    "P0112": {
+      "code": "P0112",
+      "name": "Intake Air Temperature Sensor Low Input",
+      "sensor": "IAT",
+      "circuit": "Signal Low / Short to Ground",
+      "normal_range": "-40°C to 120°C",
+      "fault_condition": "Tegangan sinyal < 0.2V (sensor short) — menunjukkan suhu > 120°C palsu",
+      "possible_causes": [
+        "Sensor IAT short circuit internal",
+        "Kabel signal IAT short ke ground / body",
+        "Konektor IAT basah / masuk air",
+        "ECU internal fault"
+      ],
+      "check_steps": [
+        "Cabut konektor sensor IAT — jika DTC berubah ke P0113, sensor yang bermasalah",
+        "Ukur resistansi sensor IAT (suhu 30°C = sekitar 1.8-2.4kΩ, jika ~0Ω = short)",
+        "Periksa kabel signal dari sensor ke ECU apakah ada short ke body",
+        "Periksa konektor dari kelembapan atau air masuk"
+      ],
+      "priority": "medium",
+      "mil_status": "on",
+      "related_dtc": ["P0113", "P0114"],
+      "system_group": "Fuel"
+    },
+    "P0113": {
+      "code": "P0113",
+      "name": "Intake Air Temperature Sensor High Input",
+      "sensor": "IAT",
+      "circuit": "Signal High / Open",
+      "normal_range": "-40°C to 120°C",
+      "fault_condition": "Tegangan sinyal > 4.8V (sensor open) — ECU baca -40°C",
+      "possible_causes": [
+        "Sensor IAT rusak / terbuka",
+        "Konektor IAT kotor atau putus",
+        "Kabel signal dari sensor ke ECU putus",
+        "ECU internal fault"
+      ],
+      "check_steps": [
+        "Ukur tegangan di pin sensor IAT (harus 0-5V sesuai suhu)",
+        "Periksa konektor IAT dari kotoran, karat, atau retakan",
+        "Test resistansi sensor: -40°C = 100kΩ, 25°C = 2.4kΩ",
+        "Jika sensor dan konektor OK → kemungkinan ECU"
+      ],
+      "priority": "medium",
+      "mil_status": "on",
+      "related_dtc": ["P0112", "P0114"],
+      "system_group": "Fuel"
+    },
+    "P0114": {
+      "code": "P0114",
+      "name": "IAT Sensor Intermittent",
+      "sensor": "IAT",
+      "circuit": "Signal Intermittent",
+      "normal_range": "-40°C to 120°C",
+      "fault_condition": "Sinyal IAT berfluktuasi tidak wajar dalam waktu singkat",
+      "possible_causes": [
+        "Konektor IAT longgar / kontak tidak stabil",
+        "Kabel IAT patah sebagian (putus-nyambung)",
+        "Sensor IAT mulai aus internal",
+        "Getaran mesin berlebih menyebabkan kontak putus-sambung"
+      ],
+      "check_steps": [
+        "Gerakkan konektor dan kabel IAT saat mesin hidup — perhatikan perubahan nilai",
+        "Periksa pin konektor apakah longgar atau bengkok",
+        "Ukur resistansi sensor sambil menggoyang konektor — cari fluktuasi",
+        "Ganti konektor jika pin sudah aus"
+      ],
+      "priority": "low",
+      "mil_status": "on",
+      "related_dtc": ["P0112", "P0113"],
+      "system_group": "Fuel"
+    },
+    "P0117": {
+      "code": "P0117",
+      "name": "Engine Coolant Temperature Sensor Low Input",
+      "sensor": "ECT",
+      "circuit": "Signal Low / Short to Ground",
+      "normal_range": "-40°C to 130°C",
+      "fault_condition": "Tegangan sinyal ECT < 0.2V (menunjukkan suhu > 130°C palsu)",
+      "possible_causes": [
+        "Sensor ECT short circuit internal",
+        "Kabel signal ECT short ke ground",
+        "Konektor ECT terkontaminasi coolant bocor",
+        "ECU internal fault"
+      ],
+      "check_steps": [
+        "Periksa apakah ada kebocoran coolant di area konektor ECT",
+        "Cabut konektor ECT — jika DTC berubah ke P0118, sensor bermasalah",
+        "Ukur resistansi sensor ECT (suhu 80°C = sekitar 300-400Ω, jika ~0Ω = short)",
+        "Periksa kabel dari sensor ke ECU apakah ada short ke ground"
+      ],
+      "priority": "high",
+      "mil_status": "on",
+      "related_dtc": ["P0118", "P0125"],
+      "system_group": "Cooling"
+    },
+    "P0118": {
+      "code": "P0118",
+      "name": "Engine Coolant Temperature Sensor High Input",
+      "sensor": "ECT",
+      "circuit": "Signal High / Open",
+      "normal_range": "-40°C to 130°C",
+      "fault_condition": "Tegangan sinyal ECT > 4.8V (sensor open) — ECU baca -40°C",
+      "possible_causes": [
+        "Sensor ECT rusak / open circuit",
+        "Konektor ECT lepas atau korosi",
+        "Kabel signal ECT putus",
+        "ECU internal fault pada sirkuit ECT"
+      ],
+      "check_steps": [
+        "Periksa konektor ECT — pastikan terpasang kencang dan bersih",
+        "Ukur resistansi sensor ECT (suhu kamar 25°C = sekitar 2-3kΩ)",
+        "Periksa pin konektor dari korosi akibat coolant bocor",
+        "Jika konektor dan kabel OK, ganti sensor ECT"
+      ],
+      "priority": "high",
+      "mil_status": "on",
+      "related_dtc": ["P0117", "P0125"],
+      "system_group": "Cooling"
+    },
+    "P0122": {
+      "code": "P0122",
+      "name": "Throttle Position Sensor Low Input",
+      "sensor": "TPS",
+      "circuit": "Signal Low",
+      "normal_range": "0.3 – 4.7V",
+      "fault_condition": "Tegangan TPS < 0.2V selama > 0.5 detik",
+      "possible_causes": [
+        "Sensor TPS rusak / short internal",
+        "Kabel signal TPS short ke ground",
+        "Konektor TPS korosi atau longgar",
+        "Throttle body bermasalah (butterfly valve stuck)"
+      ],
+      "check_steps": [
+        "Kunci ON, ukur tegangan sinyal TPS — harus 0.3-0.8V saat throttle tertutup",
+        "Putar throttle perlahan — tegangan harus naik mulus 0.3V → 4.5V",
+        "Jika tegangan tidak berubah atau stuck di 0V → sensor rusak",
+        "Periksa konektor TPS dan kabel ground"
+      ],
+      "priority": "high",
+      "mil_status": "on",
+      "related_dtc": ["P0123", "P0121"],
+      "system_group": "Throttle"
+    },
+    "P0123": {
+      "code": "P0123",
+      "name": "Throttle Position Sensor High Input",
+      "sensor": "TPS",
+      "circuit": "Signal High / Open",
+      "normal_range": "0.3 – 4.7V",
+      "fault_condition": "Tegangan TPS > 4.8V saat throttle tertutup",
+      "possible_causes": [
+        "Sensor TPS rusak / open circuit",
+        "Konektor TPS lepas",
+        "Kabel ground TPS putus",
+        "Short di kabel signal ke 5V supply"
+      ],
+      "check_steps": [
+        "Periksa konektor TPS — pastikan terpasang kuat",
+        "Ukur tegangan sinyal TPS saat throttle tertutup (harus 0.3-0.8V)",
+        "Periksa kabel ground TPS, pastikan tidak putus",
+        "Jika >4.8V saat throttle tertutup → ganti sensor TPS"
+      ],
+      "priority": "high",
+      "mil_status": "on",
+      "related_dtc": ["P0122", "P0121"],
+      "system_group": "Throttle"
+    },
+    "P0121": {
+      "code": "P0121",
+      "name": "TPS Range / Performance",
+      "sensor": "TPS",
+      "circuit": "Signal Performance",
+      "normal_range": "0.3 – 4.7V, naik linier sesuai throttle",
+      "fault_condition": "Sinyal TPS tidak sesuai dengan posisi throttle yang diharapkan",
+      "possible_causes": [
+        "Sensor TPS aus — dead spot di track resistif",
+        "Throttle body kotor menyebabkan gerakan tidak mulus",
+        "Kabel TPS intermittent",
+        "Pemasangan sensor TPS tidak presisi"
+      ],
+      "check_steps": [
+        "Bersihkan throttle body dengan carb cleaner",
+        "Monitor live data TPS sambil buka-tutup gas perlahan — cari lompatan/dead spot",
+        "Jika sinyal lompat-lompat di titik tertentu → sensor aus, ganti",
+        "Periksa pemasangan sensor TPS pada throttle body"
+      ],
+      "priority": "medium",
+      "mil_status": "on",
+      "related_dtc": ["P0122", "P0123"],
+      "system_group": "Throttle"
+    },
+    "P0125": {
+      "code": "P0125",
+      "name": "Insufficient Coolant Temperature for Closed Loop",
+      "sensor": "ECT",
+      "circuit": "System Performance",
+      "normal_range": "Operating temp 75-100°C",
+      "fault_condition": "ECT tidak mencapai suhu operasional setelah waktu tertentu",
+      "possible_causes": [
+        "Thermostat stuck open",
+        "Sensor ECT memberikan nilai salah",
+        "Kipas radiator nyala terus (relay stuck)",
+        "Coolant level terlalu rendah"
+      ],
+      "check_steps": [
+        "Panaskan mesin minimal 15 menit — periksa apakah ECT naik ke 75-95°C",
+        "Jika ECT tidak naik → periksa thermostat (kemungkinan stuck open)",
+        "Periksa level coolant",
+        "Periksa relay kipas radiator — apakah kipas nyala terus padahal mesin dingin"
+      ],
+      "priority": "low",
+      "mil_status": "on",
+      "related_dtc": ["P0117", "P0118"],
+      "system_group": "Cooling"
+    },
+    "P0131": {
+      "code": "P0131",
+      "name": "O2 Sensor Low Voltage (Bank 1 Sensor 1)",
+      "sensor": "HO2S",
+      "circuit": "Signal Low",
+      "normal_range": "0.1 – 0.9V",
+      "fault_condition": "Tegangan O2 sensor < 0.1V selama > 60 detik pada closed loop",
+      "possible_causes": [
+        "O2 sensor rusak / aging",
+        "Kebocoran udara pada exhaust (exhaust leak)",
+        "Campuran BBM terlalu kurus (lean)",
+        "Kabel signal O2 sensor putus atau short ke ground"
+      ],
+      "check_steps": [
+        "Monitor live data O2 sensor — harus berfluktuasi 0.1-0.9V pada closed loop",
+        "Jika stuck < 0.1V → periksa kebocoran exhaust terlebih dahulu",
+        "Periksa apakah ada masalah fuel delivery (filter, pompa, injektor)",
+        "Ukur tegangan reference heater O2 sensor"
+      ],
+      "priority": "medium",
+      "mil_status": "on",
+      "related_dtc": ["P0132", "P0171"],
+      "system_group": "Fuel Trim"
+    },
+    "P0132": {
+      "code": "P0132",
+      "name": "O2 Sensor High Voltage (Bank 1 Sensor 1)",
+      "sensor": "HO2S",
+      "circuit": "Signal High",
+      "normal_range": "0.1 – 0.9V",
+      "fault_condition": "Tegangan O2 sensor > 0.9V selama > 60 detik pada closed loop",
+      "possible_causes": [
+        "O2 sensor rusak (stuck rich)",
+        "Kebocoran injektor (fuel leaking)",
+        "Fuel pressure terlalu tinggi",
+        "Kabel signal O2 sensor short ke power supply"
+      ],
+      "check_steps": [
+        "Monitor live data O2 — jika stuck > 0.9V → sensor mungkin rusak",
+        "Periksa apakah ada bau bensin berlebihan (injektor bocor)",
+        "Periksa fuel pressure regulator",
+        "Ganti O2 sensor jika sudah > 80.000 km"
+      ],
+      "priority": "medium",
+      "mil_status": "on",
+      "related_dtc": ["P0131", "P0172"],
+      "system_group": "Fuel Trim"
+    },
+    "P0171": {
+      "code": "P0171",
+      "name": "System Too Lean",
+      "sensor": "Fuel Trim",
+      "circuit": "System Performance",
+      "normal_range": "Fuel Trim ±5%",
+      "fault_condition": "Long Term Fuel Trim > +20% (ECU terus menambah bahan bakar)",
+      "possible_causes": [
+        "Kebocoran udara di intake manifold / vacuum hose",
+        "Injektor kotor atau tersumbat sebagian",
+        "Fuel pressure rendah (pompa lemah / filter tersumbat)",
+        "Sensor O2 / MAF / MAP memberikan data salah"
+      ],
+      "check_steps": [
+        "Periksa semua vacuum hose dan gasket intake manifold — cari kebocoran udara",
+        "Monitor Fuel Trim live — jika > +15% pada idle → kebocoran udara",
+        "Bersihkan atau ganti injektor",
+        "Periksa fuel pressure (Honda: umumnya 2.3-3.0 bar)",
+        "Cek filter udara — apakah terlalu kotor atau terlalu longgar"
+      ],
+      "priority": "medium",
+      "mil_status": "on",
+      "related_dtc": ["P0172", "P0131", "P0107"],
+      "system_group": "Air/Fuel"
+    },
+    "P0172": {
+      "code": "P0172",
+      "name": "System Too Rich",
+      "sensor": "Fuel Trim",
+      "circuit": "System Performance",
+      "normal_range": "Fuel Trim ±5%",
+      "fault_condition": "Long Term Fuel Trim < -20% (ECU terus mengurangi bahan bakar)",
+      "possible_causes": [
+        "Injektor bocor (fuel leak)",
+        "Fuel pressure terlalu tinggi (regulator rusak)",
+        "Sensor O2 stuck di posisi lean → ECU over-compensate",
+        "Filter udara tersumbat (kurang udara masuk)",
+        "Charcoal canister / EVAP system masalah"
+      ],
+      "check_steps": [
+        "Periksa apakah ada bau bensin berlebih atau knalpot hitam pekat",
+        "Monitor Fuel Trim live — jika < -15% → terlalu kaya",
+        "Periksa filter udara — bersihkan atau ganti jika tersumbat",
+        "Periksa fuel pressure regulator — fuel pressure seharusnya 2.3-3.0 bar",
+        "Periksa injektor apakah bocor saat mesin mati (leaking test)"
+      ],
+      "priority": "medium",
+      "mil_status": "on",
+      "related_dtc": ["P0171", "P0132", "P0108"],
+      "system_group": "Air/Fuel"
+    },
+    "P0201": {
+      "code": "P0201",
+      "name": "Injector Circuit Open",
+      "sensor": "INJ",
+      "circuit": "Driver Circuit Open",
+      "normal_range": "Resistansi injektor 10-16Ω",
+      "fault_condition": "ECU tidak mendeteksi arus pada sirkuit injektor",
+      "possible_causes": [
+        "Injektor rusak / coil putus",
+        "Konektor injektor lepas atau korosi",
+        "Kabel power / ground injektor putus",
+        "Driver injektor pada ECU rusak"
+      ],
+      "check_steps": [
+        "Periksa konektor injektor — pastikan terpasang kencang",
+        "Ukur resistansi injektor (harus 10-16Ω untuk Honda PGM-FI)",
+        "Periksa tegangan 12V pada konektor injektor saat kunci ON",
+        "Swap test injektor dengan yang diketahui bagus"
+      ],
+      "priority": "critical",
+      "mil_status": "on",
+      "related_dtc": [],
+      "system_group": "Fuel"
+    },
+    "P0261": {
+      "code": "P0261",
+      "name": "Injector Circuit Low",
+      "sensor": "INJ",
+      "circuit": "Driver Circuit Low / Short",
+      "normal_range": "Resistansi injektor 10-16Ω",
+      "fault_condition": "Short circuit terdeteksi pada driver injektor",
+      "possible_causes": [
+        "Kabel injektor short ke ground / body",
+        "Injektor internal short circuit",
+        "Driver circuit pada ECU bermasalah"
+      ],
+      "check_steps": [
+        "Ukur resistansi injektor (jika < 5Ω → short circuit, ganti)",
+        "Periksa kabel injektor apakah ada yang terbuka dan menyentuh body",
+        "Cabut konektor injektor, clear DTC — jika tidak muncul lagi, masalah di injektor"
+      ],
+      "priority": "critical",
+      "mil_status": "on",
+      "related_dtc": ["P0201"],
+      "system_group": "Fuel"
+    },
+    "P0335": {
+      "code": "P0335",
+      "name": "Crankshaft Position Sensor (CKP) No Signal",
+      "sensor": "CKP",
+      "circuit": "No Signal",
+      "normal_range": "Pulse signal saat mesin berputar",
+      "fault_condition": "ECU tidak menerima sinyal CKP padahal starter berputar",
+      "possible_causes": [
+        "Sensor CKP rusak",
+        "Konektor CKP lepas atau korosi",
+        "Rotor engkol (pulse plate) rusak atau aus",
+        "Gap sensor CKP terlalu lebar",
+        "Kabel signal CKP putus"
+      ],
+      "check_steps": [
+        "Periksa konektor CKP — pastikan bersih dan terpasang kuat",
+        "Ukur resistansi sensor CKP (Honda: umumnya 100-200Ω untuk coil type)",
+        "Periksa gap antara sensor CKP dan rotor engkol (seharusnya 0.5-1.5mm)",
+        "Periksa rotor engkol dari kerusakan atau kotoran logam menempel",
+        "Monitor RPM live data saat cranking — jika 0 RPM = tidak ada sinyal CKP"
+      ],
+      "priority": "critical",
+      "mil_status": "on",
+      "related_dtc": [],
+      "system_group": "Ignition"
+    },
+    "P0351": {
+      "code": "P0351",
+      "name": "Ignition Coil Primary Circuit",
+      "sensor": "IGN",
+      "circuit": "Primary Coil Circuit",
+      "normal_range": "Resistansi primer coil 0.5-2Ω, sekunder 5-15kΩ",
+      "fault_condition": "ECU tidak mendeteksi feedback dari sirkuit pengapian",
+      "possible_causes": [
+        "Koil pengapian rusak",
+        "Konektor koil lepas atau korosi",
+        "CDI / igniter unit rusak",
+        "Kabel dari ECU ke koil putus"
+      ],
+      "check_steps": [
+        "Ukur resistansi primer koil (0.5-2Ω) dan sekunder (5-15kΩ)",
+        "Periksa konektor koil dan CDI — pastikan bersih dan kencang",
+        "Periksa tegangan supply ke koil saat kunci ON (12V)",
+        "Swap test koil dengan yang diketahui bagus"
+      ],
+      "priority": "critical",
+      "mil_status": "on",
+      "related_dtc": ["P0335"],
+      "system_group": "Ignition"
+    },
+    "P0505": {
+      "code": "P0505",
+      "name": "Idle Air Control System Malfunction",
+      "sensor": "IACV",
+      "circuit": "System Control",
+      "normal_range": "IACV 30-60% pada idle normal",
+      "fault_condition": "IACV tidak merespon perintah ECU atau RPM idle tidak stabil",
+      "possible_causes": [
+        "IACV (Idle Air Control Valve) kotor atau macet",
+        "Konektor IACV lepas atau korosi",
+        "Kabel driver IACV putus",
+        "Throttle body kotor — bypass air terhambat"
+      ],
+      "check_steps": [
+        "Bersihkan throttle body dan saluran idle air control dengan carb cleaner",
+        "Monitor IACV% pada live data — harus 30-60% pada idle normal",
+        "Periksa konektor IACV, pastikan terpasang kuat",
+        "Jika IACV stuck di 0% atau 100% → valve macet, bersihkan atau ganti"
+      ],
+      "priority": "medium",
+      "mil_status": "on",
+      "related_dtc": [],
+      "system_group": "Idle Control"
+    },
+    "P0562": {
+      "code": "P0562",
+      "name": "System Voltage Low (Battery)",
+      "sensor": "VB",
+      "circuit": "System Voltage",
+      "normal_range": "13.5 – 14.5V (mesin hidup)",
+      "fault_condition": "Tegangan battery < 11V selama > 5 detik saat mesin hidup",
+      "possible_causes": [
+        "Aki lemah atau rusak (tidak bisa menyimpan daya)",
+        "Alternator / spul pengisian tidak berfungsi",
+        "Regulator / rectifier rusak",
+        "Kabel pengisian longgar atau korosi pada terminal aki"
+      ],
+      "check_steps": [
+        "Ukur tegangan aki mesin mati (harus > 12.4V, jika < 12V = aki lemah)",
+        "Ukur tegangan saat mesin hidup RPM 3000 (harus 13.5-14.5V)",
+        "Jika tegangan tidak naik saat mesin hidup → alternator atau regulator bermasalah",
+        "Periksa terminal aki dari korosi — bersihkan dengan sikat kawat",
+        "Periksa kabel pengisian dari alternator ke regulator ke aki"
+      ],
+      "priority": "medium",
+      "mil_status": "on",
+      "related_dtc": ["P0563"],
+      "system_group": "Charging"
+    },
+    "P0563": {
+      "code": "P0563",
+      "name": "System Voltage High (Battery)",
+      "sensor": "VB",
+      "circuit": "System Voltage",
+      "normal_range": "13.5 – 14.5V (mesin hidup)",
+      "fault_condition": "Tegangan battery > 15.5V selama > 5 detik",
+      "possible_causes": [
+        "Regulator / rectifier rusak (overcharging)",
+        "Koneksi ground aki buruk",
+        "Aki rusak (tidak bisa menyerap charge)"
+      ],
+      "check_steps": [
+        "Ukur tegangan aki saat mesin hidup RPM 3000 — jika > 15V = overcharging",
+        "HATI-HATI: Overcharging bisa meledakkan aki dan merusak ECU!",
+        "Periksa regulator / rectifier — kemungkinan besar rusak",
+        "Periksa koneksi ground aki dan body frame",
+        "Segera matikan mesin jika tegangan > 16V untuk mencegah kerusakan ECU"
+      ],
+      "priority": "critical",
+      "mil_status": "on",
+      "related_dtc": ["P0562"],
+      "system_group": "Charging"
+    },
+    "P0650": {
+      "code": "P0650",
+      "name": "MIL Circuit Malfunction",
+      "sensor": "MIL",
+      "circuit": "MIL Driver",
+      "normal_range": "Lampu MIL menyala saat kunci ON, mati setelah engine start",
+      "fault_condition": "ECU tidak bisa mengendalikan lampu MIL (Malfunction Indicator Lamp)",
+      "possible_causes": [
+        "Lampu MIL (LED di dashboard) putus",
+        "Kabel MIL putus atau short",
+        "Driver MIL pada ECU rusak"
+      ],
+      "check_steps": [
+        "Periksa apakah lampu MIL menyala saat kunci ON (self test normal)",
+        "Jika tidak menyala → periksa bohlam/LED MIL, mungkin putus",
+        "Periksa kabel dari ECU ke lampu MIL di dashboard",
+        "Periksa fuse yang terkait dengan dashboard / instrument panel"
+      ],
+      "priority": "low",
+      "mil_status": "off",
+      "related_dtc": [],
+      "system_group": "System"
+    },
+    "P1297": {
+      "code": "P1297",
+      "name": "Electric Oil Pressure Sensor",
+      "sensor": "EOP",
+      "circuit": "Oil Pressure Signal",
+      "normal_range": "Tekanan oli normal saat mesin hidup",
+      "fault_condition": "Sinyal tekanan oli di luar range yang diharapkan",
+      "possible_causes": [
+        "Sensor tekanan oli rusak",
+        "Level oli mesin terlalu rendah",
+        "Pompa oli aus / tidak bekerja optimal",
+        "Konektor sensor tekanan oli lepas"
+      ],
+      "check_steps": [
+        "Periksa level oli mesin — tambah jika kurang",
+        "Periksa kondisi oli (warna, kekentalan) — ganti jika sudah hitam pekat",
+        "Periksa konektor sensor tekanan oli",
+        "Jika oli dan konektor OK → ganti sensor tekanan oli"
+      ],
+      "priority": "high",
+      "mil_status": "on",
+      "related_dtc": [],
+      "system_group": "Lubrication"
+    },
+    "P1298": {
+      "code": "P1298",
+      "name": "Electrical Load Detector (ELD) Circuit",
+      "sensor": "ELD",
+      "circuit": "Current Sensor",
+      "normal_range": "Signal sesuai beban kelistrikan",
+      "fault_condition": "Sinyal ELD tidak sesuai beban kelistrikan aktual",
+      "possible_causes": [
+        "Sensor ELD rusak (di fuse box)",
+        "Konektor ELD korosi",
+        "Fuse box bermasalah",
+        "Kabel dari ELD ke ECU putus"
+      ],
+      "check_steps": [
+        "Periksa fuse box — sensor ELD biasanya terintegrasi di fuse box utama",
+        "Periksa konektor ELD dari korosi atau longgar",
+        "Nyalakan lampu depan → monitor perubahan sinyal ELD pada live data",
+        "Jika tidak ada perubahan sinyal → sensor ELD mungkin rusak"
+      ],
+      "priority": "medium",
+      "mil_status": "on",
+      "related_dtc": ["P0562"],
+      "system_group": "Charging"
+    },
+    "P1456": {
+      "code": "P1456",
+      "name": "EVAP System Leak (Fuel Tank)",
+      "sensor": "EVAP",
+      "circuit": "Leak Detection",
+      "normal_range": "Sistem EVAP tertutup rapat",
+      "fault_condition": "Kebocoran terdeteksi pada sistem penguapan bahan bakar",
+      "possible_causes": [
+        "Tutup tangki bensin tidak rapat / seal rusak",
+        "Selang EVAP retak atau lepas",
+        "Charcoal canister rusak / tersumbat",
+        "Purge valve stuck open/closed"
+      ],
+      "check_steps": [
+        "Periksa tutup tangki bensin — pastikan tertutup rapat, periksa seal",
+        "Periksa selang EVAP dari tangki ke charcoal canister — cari retak/lepas",
+        "Periksa charcoal canister — ketuk untuk cek apakah ada suara material di dalam",
+        "Clear DTC, kencangkan tutup tangki, jika DTC tidak kembali → seal tutup tangki"
+      ],
+      "priority": "low",
+      "mil_status": "on",
+      "related_dtc": [],
+      "system_group": "Evaporative"
+    },
+    "P1519": {
+      "code": "P1519",
+      "name": "Idle Air Control Valve Stuck",
+      "sensor": "IACV",
+      "circuit": "Valve Stuck",
+      "normal_range": "IACV 30-60% pada idle, responsif terhadap beban",
+      "fault_condition": "IACV tidak bergerak dari posisi tertentu",
+      "possible_causes": [
+        "IACV macet karena carbon deposit",
+        "Motor stepper IACV rusak",
+        "Konektor IACV bermasalah",
+        "Throttle body sangat kotor"
+      ],
+      "check_steps": [
+        "Lepas IACV dari throttle body, bersihkan dengan carb cleaner / brake cleaner",
+        "Periksa gerakan IACV — harus bisa bergerak bebas",
+        "Periksa konektor IACV (biasanya 2-pin atau 3-pin)",
+        "Jika setelah dibersihkan masih macet → ganti IACV"
+      ],
+      "priority": "medium",
+      "mil_status": "on",
+      "related_dtc": ["P0505"],
+      "system_group": "Idle Control"
+    }
+  }
+}

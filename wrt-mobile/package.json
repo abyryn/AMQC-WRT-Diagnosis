@@ -1,0 +1,21 @@
+{
+  "name": "wrt-mobile",
+  "version": "2.0.0",
+  "description": "WRT Garage — Honda PGM-FI AI Diagnostic Mobile & Web App",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js",
+    "web": "node server.js"
+  },
+  "keywords": [
+    "honda",
+    "pgm-fi",
+    "diagnostic",
+    "k-line",
+    "ai",
+    "react-native"
+  ],
+  "author": "WRT Garage Team",
+  "license": "MIT"
+}

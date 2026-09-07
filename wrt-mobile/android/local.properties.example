@@ -1,0 +1,3 @@
+# Android SDK path setup
+# Change this path to match your local Android SDK installation directory
+sdk.dir=C\:\\Users\\A D M I N\\AppData\\Local\\Android\\Sdk
