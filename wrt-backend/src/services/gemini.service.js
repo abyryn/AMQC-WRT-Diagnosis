@@ -5,7 +5,7 @@
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY || '';
-const DEFAULT_MODEL = process.env.GEMINI_MODEL || 'gemini-3.5-flash';
+const DEFAULT_MODEL = process.env.GEMINI_MODEL || 'gemini-3.6-flash';
 
 const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
 
@@ -13,42 +13,53 @@ const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
 const diagnosisCache = new Map();
 const CACHE_TTL_MS = 60 * 60 * 1000;
 
+// Helper for ultra-strict latency capping
+function timeoutPromise(ms) {
+  return new Promise((_, reject) => {
+    setTimeout(() => reject(new Error(`Timeout API Gemini (${ms}ms)`)), ms);
+  });
+}
+
 function getCacheKey(payload) {
   const dtcKey = [...(payload.dtc?.active || []), ...(payload.dtc?.pending || [])].sort().join(',');
   const motorKey = payload.motor?.model || payload.motor || 'all';
-  const iat = payload.live_data?.iat_celsius ?? '';
-  const ect = payload.live_data?.ect_celsius ?? '';
-  const vbat = payload.live_data?.battery_volt ?? '';
+  // Round live values to prevent cache misses on minor telemetry decimal noise
+  const iat = Math.round(payload.live_data?.iat_celsius ?? 0);
+  const ect = Math.round(payload.live_data?.ect_celsius ?? 0);
+  const vbat = Math.round((payload.live_data?.battery_volt ?? 0) * 10) / 10;
   return `${motorKey}_${dtcKey}_${iat}_${ect}_${vbat}`;
 }
 
-// Master System Prompt (Streamlined for Ultra-Fast JSON Output)
+// Master System Prompt (Optimized for Deep Master Technician Analysis)
 const SYSTEM_PROMPT = `Anda adalah Honda Master Technician (20 tahun pengalaman PGM-FI).
-TUGAS: Analisis data ECU Honda PGM-FI & berikan diagnosis terstruktur cepat dalam JSON.
+TUGAS: Analisis data ECU Honda PGM-FI secara mendalam, presisi, dan lengkap.
 
 ATURAN:
-1. Korelasikan DTC + data live sensor secara presisi
-2. Berikan urutan langkah pemeriksaan mekanik (mudah ke sulit)
+1. Korelasikan DTC + data live sensor + keluhan mekanik secara presisi teknis bengkel resmi Honda.
+2. Berikan urutan langkah pemeriksaan mekanik secara sistematis dari yang termudah ke tersulit.
 3. Format output WAJIB JSON murni tanpa markdown/teks pengantar:
 
 {
-  "summary": "Ringkasan 1-2 kalimat kondisi motor",
+  "summary": "Ringkasan analisis kondisi motor secara komprehensif",
   "risk_level": "low|medium|high|critical",
   "primary_cause": {
-    "description": "Penyebab utama yang paling mungkin",
-    "confidence": "85%",
-    "evidence": ["bukti data sensor/DTC"]
+    "description": "Penyebab utama yang paling mungkin beserta penjelasan teknis",
+    "confidence": "95%",
+    "evidence": ["Bukti data sensor", "Kode DTC aktif", "Gejala keluhan"]
   },
   "alternative_causes": [
-    {"description": "Penyebab alternatif 1", "confidence": "10%"}
+    {"description": "Penyebab alternatif 1", "confidence": "15%"},
+    {"description": "Penyebab alternatif 2", "confidence": "5%"}
   ],
   "check_steps": [
     "Langkah 1: ...",
     "Langkah 2: ...",
-    "Langkah 3: ..."
+    "Langkah 3: ...",
+    "Langkah 4: ...",
+    "Langkah 5: ..."
   ],
-  "additional_data_needed": [],
-  "safety_warning": "Peringatan keselamatan jika ada, null jika aman"
+  "additional_data_needed": ["Data atau pengukuran tambahan yang diperlukan"],
+  "safety_warning": "Peringatan keselamatan teknis jika ada, atau null jika aman"
 }`;
 
 // Chat System Prompt (Optimized for Fast Mechanic Responses)
@@ -90,14 +101,8 @@ ${enrichedContext}
 
 Hasilkan output diagnosis JSON:`;
 
-  // Candidate models prioritized by speed and stability
-  const modelsToTry = [
-    DEFAULT_MODEL,
-    'gemini-3.5-flash',
-    'gemini-3.6-flash',
-    'gemini-3.5-flash-lite',
-    'gemini-3.1-flash-lite',
-  ];
+  // Candidate models: Use direct Gemini 3.6 Flash
+  const modelsToTry = ['gemini-3.6-flash'];
 
   for (const mName of modelsToTry) {
     try {
@@ -105,14 +110,18 @@ Hasilkan output diagnosis JSON:`;
         model: mName,
         generationConfig: {
           responseMimeType: 'application/json',
-          temperature: 0.1,
-          maxOutputTokens: 4096,
+          temperature: 0.2,
+          maxOutputTokens: 3072,
         },
       });
 
-      const result = await model.generateContent(userPrompt);
+      const result = await Promise.race([
+        model.generateContent(userPrompt),
+        timeoutPromise(45000),
+      ]);
       const latencyMs = Date.now() - startTime;
-      const responseText = result.response.text() || '{}';
+      let responseText = (result.response.text() || '{}').trim();
+      responseText = responseText.replace(/^```json\s*/i, '').replace(/^```\s*/i, '').replace(/\s*```$/i, '').trim();
 
       let parsedResponse;
       try {
@@ -120,12 +129,17 @@ Hasilkan output diagnosis JSON:`;
       } catch {
         const jsonMatch = responseText.match(/\{[\s\S]*\}/);
         if (jsonMatch) {
-          parsedResponse = JSON.parse(jsonMatch[0]);
-        } else {
+          try {
+            parsedResponse = JSON.parse(jsonMatch[0]);
+          } catch {
+            parsedResponse = null;
+          }
+        }
+        if (!parsedResponse) {
           parsedResponse = {
-            summary: responseText,
+            summary: 'Diagnosis sistem PGM-FI selesai.',
             risk_level: 'medium',
-            primary_cause: { description: 'Hasil analisis Gemini', confidence: '80%', evidence: [] },
+            primary_cause: { description: responseText.slice(0, 200), confidence: '80%', evidence: [] },
             alternative_causes: [],
             check_steps: ['Periksa sambungan kabel dan sensor'],
             additional_data_needed: [],
@@ -160,6 +174,14 @@ Hasilkan output diagnosis JSON:`;
   // Graceful fallback to Local Rule Engine (< 2ms)
   console.warn('[Gemini Fast] Remote fallback. Activating WRT Local AI Engine.');
   const localDiagnosis = generateLocalDiagnosis(payload, enrichedContext);
+
+  diagnosisCache.set(cacheKey, {
+    data: localDiagnosis,
+    model: 'WRT-MasterTech-Engine-v2.0 (Local Fast)',
+    tokens: 350,
+    timestamp: Date.now(),
+  });
+
   return {
     success: true,
     diagnosis: localDiagnosis,
@@ -207,13 +229,10 @@ function cleanChatHistory(rawHistory) {
  */
 async function chat(message, history = []) {
   const startTime = Date.now();
-  const modelsToTry = [
+  const modelsToTry = Array.from(new Set([
     DEFAULT_MODEL,
-    'gemini-3.5-flash',
     'gemini-3.6-flash',
-    'gemini-3.5-flash-lite',
-    'gemini-3.1-flash-lite',
-  ];
+  ]));
 
   const formattedHistory = cleanChatHistory(history);
 
@@ -224,7 +243,7 @@ async function chat(message, history = []) {
         systemInstruction: CHAT_SYSTEM_PROMPT,
         generationConfig: {
           temperature: 0.2,
-          maxOutputTokens: 4096,
+          maxOutputTokens: 1024,
         },
       });
 
@@ -232,7 +251,10 @@ async function chat(message, history = []) {
         history: formattedHistory,
       });
 
-      const result = await chatSession.sendMessage(message);
+      const result = await Promise.race([
+        chatSession.sendMessage(message),
+        timeoutPromise(35000),
+      ]);
       const reply = result.response.text();
       const latencyMs = Date.now() - startTime;
 

@@ -31,39 +31,20 @@ const state = {
     tps_volt: 0.48,
     tps_pct: 0.0,
     map_kpa: 34.2,
-    iat_celsius: -40.0, // Initial fault for demonstration
+    iat_celsius: 32.0, // Normal idle temperature
     ect_celsius: 88.0,
     o2_volt: 0.45,
-    battery_volt: 11.8,
+    battery_volt: 13.8,
     iacv_pct: 28.0,
-    fuel_trim_pct: 4.2,
-    ltft_pct: 2.1,
+    fuel_trim_pct: 0.0,
+    ltft_pct: 0.0,
     vehicle_speed: 0,
-    inj_ms: 2.45,
+    inj_ms: 2.15,
     ign_deg: 12.0,
   },
 
-  // Active DTC List
-  activeDTCs: [
-    {
-      code: 'P0113',
-      name: 'Intake Air Temperature Sensor High Input',
-      sensor: 'IAT',
-      circuit: 'Signal High / Open',
-      priority: 'medium',
-      mil_status: 'on',
-      status: 'active',
-    },
-    {
-      code: 'P0562',
-      name: 'Battery Voltage Low',
-      sensor: 'BATTERY',
-      circuit: 'Charging System',
-      priority: 'high',
-      mil_status: 'on',
-      status: 'active',
-    },
-  ],
+  // Active DTC List (Initially empty - Normal healthy motor)
+  activeDTCs: [],
 
   // AI Chat History
   chatHistory: [],
@@ -208,7 +189,6 @@ function initTelemetryLoop() {
   pauseBtn?.addEventListener('click', () => {
     state.isPaused = !state.isPaused;
     document.getElementById('btnPauseText').textContent = state.isPaused ? 'Resume Stream' : 'Pause Stream';
-    document.getElementById('btnPauseIcon').textContent = state.isPaused ? '▶️' : '⏸️';
     showToast(state.isPaused ? 'Stream telemetri dijeda' : 'Stream telemetri berjalan', 'info');
   });
 
@@ -383,7 +363,7 @@ function updateDashboardGauges() {
   const iatElem = document.getElementById('dashIatVal');
   if (iatElem) {
     if (state.sensors.iat_celsius <= -30) {
-      iatElem.textContent = `${state.sensors.iat_celsius} °C ⚠️`;
+      iatElem.textContent = `${state.sensors.iat_celsius} °C`;
       iatElem.className = 'mini-value text-danger';
     } else {
       iatElem.textContent = `${state.sensors.iat_celsius} °C`;
@@ -626,7 +606,7 @@ function renderDtcList() {
     if (container) {
       container.innerHTML = `
         <div style="padding: 24px; text-align: center; color: var(--accent-green);">
-          <h3>✅ ECM Bersih (Tidak Ada DTC)</h3>
+          <h3>ECM Bersih (Tidak Ada DTC)</h3>
           <p style="font-size: 12px; color: var(--text-secondary); margin-top: 6px;">
             Seluruh sistem kontrol elektronik Honda PGM-FI berfungsi normal. Lampu MIL speedometer mati.
           </p>
@@ -640,7 +620,7 @@ function renderDtcList() {
   if (bannerCodes) {
     bannerCodes.innerHTML = state.activeDTCs.map((d) => `
       <span class="dtc-chip ${d.priority === 'high' || d.priority === 'critical' ? 'chip-critical' : 'chip-warning'}">
-        🔴 ${d.code} (${d.name})
+        ${d.code} (${d.name})
       </span>
     `).join('');
   }
@@ -650,7 +630,7 @@ function renderDtcList() {
       <div class="dtc-item-card ${idx === 0 ? 'selected' : ''}" data-dtc="${d.code}" onclick="selectDtcDetail('${d.code}')">
         <div class="dtc-item-header">
           <span class="dtc-code-badge ${d.priority === 'high' ? 'badge-critical' : 'badge-warning'}">${d.code}</span>
-          <span class="dtc-mil-status">🔴 MIL ON</span>
+          <span class="dtc-mil-status mil-active">MIL ON</span>
         </div>
         <div class="dtc-item-name">${d.name}</div>
         <div class="dtc-item-meta">
@@ -725,7 +705,7 @@ function clearDtcAction() {
   state.activeDTCs = [];
   state.sensors.iat_celsius = 32.0; // Reset sensor to normal
   renderDtcList();
-  showToast('✅ Perintah K-Line "72 05 04 00 85" Terkirim: ECM Berhasil Direset & MIL Dimatikan!', 'success');
+  showToast('Perintah K-Line "72 05 04 00 85" Terkirim: ECM Berhasil Direset & MIL Dimatikan', 'success');
 }
 
 // ============================================
@@ -736,6 +716,72 @@ function initAiStudio() {
   form?.addEventListener('submit', async (e) => {
     e.preventDefault();
     await executeAiDiagnosis();
+  });
+
+  // Preset Condition Buttons Handler
+  const presetBtns = document.querySelectorAll('.preset-btn');
+  presetBtns.forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const preset = btn.getAttribute('data-preset');
+      presetBtns.forEach((b) => b.classList.remove('active'));
+      btn.classList.add('active');
+
+      const complaintInput = document.getElementById('aiComplaint');
+
+      if (preset === 'normal') {
+        state.activeDTCs = [];
+        state.sensors.iat_celsius = 32.0;
+        state.sensors.ect_celsius = 88.0;
+        state.sensors.battery_volt = 13.8;
+        if (complaintInput) {
+          complaintInput.value = 'Motor dalam kondisi sehat dan halus, tidak ada lampu MIL berkedip. Ingin cek kesehatan sistem sensor PGM-FI secara berkala.';
+        }
+        renderDtcList();
+        showToast('Preset: Kondisi Motor Normal & Sehat (Tanpa DTC)', 'success');
+      } else if (preset === 'fault_iat') {
+        state.sensors.iat_celsius = -40.0;
+        if (!state.activeDTCs.some((d) => d.code === 'P0113')) {
+          state.activeDTCs.push({
+            code: 'P0113',
+            name: 'Intake Air Temperature Sensor High Input',
+            sensor: 'IAT',
+            circuit: 'Signal High / Open',
+            priority: 'medium',
+            mil_status: 'on',
+            status: 'active',
+          });
+        }
+        if (complaintInput) {
+          complaintInput.value = 'Motor brebet saat digas di tarikan awal, lampu MIL berkedip 9 kali setelah terkena hujan, dan konsumsi bensin terasa lebih boros.';
+        }
+        renderDtcList();
+        showToast('Preset: Fault Sensor IAT Terbuka (-40°C & DTC P0113)', 'danger');
+      } else if (preset === 'fault_overheat') {
+        state.sensors.ect_celsius = 118.0;
+        if (complaintInput) {
+          complaintInput.value = 'Temperatur radiator terasa sangat tinggi (118°C), cairan coolant meluap ke reservoir, dan kipas radiator menyala terus.';
+        }
+        showToast('Preset: Fault Temperatur Overheating (118°C)', 'warning');
+      } else if (preset === 'fault_battery') {
+        state.sensors.battery_volt = 10.4;
+        if (!state.activeDTCs.some((d) => d.code === 'P0562')) {
+          state.activeDTCs.push({
+            code: 'P0562',
+            name: 'Battery Voltage Low',
+            sensor: 'BATTERY',
+            circuit: 'Charging System',
+            priority: 'high',
+            mil_status: 'on',
+            status: 'active',
+          });
+        }
+        if (complaintInput) {
+          complaintInput.value = 'Starter elektrik motor terasa sangat lemah saat pagi hari, tegangan aki terdeteksi drop di bawah 11 Volt.';
+        }
+        renderDtcList();
+        showToast('Preset: Fault Tegangan Aki Low (10.4V & DTC P0562)', 'warning');
+      }
+    });
   });
 
   document.getElementById('btnTransferToPrinter')?.addEventListener('click', () => {
@@ -807,18 +853,24 @@ async function executeAiDiagnosis() {
 
     const result = await res.json();
     renderAiResult(result);
-    showToast('✅ Analisis 3-Layer AI Diagnosis Selesai!', 'success');
+    showToast('Analisis 3-Layer AI Diagnosis Selesai', 'success');
   } catch (err) {
     console.error('Diagnosis Error:', err);
     showToast(`Gagal memproses diagnosis: ${err.message}`, 'danger');
   } finally {
     btn.disabled = false;
     spinner.classList.add('hidden');
-    btnText.textContent = '🚀 Jalankan 3-Layer AI Diagnosis';
+    btnText.textContent = 'Jalankan 3-Layer AI Diagnosis';
   }
 }
 
 function renderAiResult(result) {
+  // Hide empty state and show diagnosis result card
+  const emptyState = document.getElementById('aiEmptyState');
+  const resultCard = document.getElementById('aiResultCard');
+  if (emptyState) emptyState.classList.add('hidden');
+  if (resultCard) resultCard.classList.remove('hidden');
+
   const ai = result.layers?.layer3_ai || {};
   const meta = result.metadata || {};
 
@@ -829,7 +881,7 @@ function renderAiResult(result) {
   if (riskBadge) {
     const risk = (ai.risk_level || 'medium').toLowerCase();
     riskBadge.className = `risk-badge risk-${risk}`;
-    riskBadge.textContent = `⚠️ ${risk.toUpperCase()} RISK`;
+    riskBadge.textContent = `${risk.toUpperCase()} RISK`;
   }
 
   // Summary
@@ -931,7 +983,7 @@ function initAiChat() {
     if (container) {
       container.innerHTML = `
         <div class="chat-msg msg-assistant">
-          <div class="msg-avatar">🏍️</div>
+          <div class="msg-avatar">TECH</div>
           <div class="msg-bubble">
             <div class="msg-author">WRT AI Master Technician</div>
             <div class="msg-content">
@@ -953,7 +1005,7 @@ async function sendChatMessage(text) {
   const userTime = new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
   container.insertAdjacentHTML('beforeend', `
     <div class="chat-msg msg-user">
-      <div class="msg-avatar">👤</div>
+      <div class="msg-avatar">TECH</div>
       <div class="msg-bubble">
         <div class="msg-content">${escapeHtml(text)}</div>
         <div class="msg-time">${userTime}</div>
@@ -967,7 +1019,7 @@ async function sendChatMessage(text) {
   const typingId = 'typing_' + Date.now();
   container.insertAdjacentHTML('beforeend', `
     <div class="chat-msg msg-assistant" id="${typingId}">
-      <div class="msg-avatar">🏍️</div>
+      <div class="msg-avatar">TECH</div>
       <div class="msg-bubble">
         <div class="msg-content" style="color: var(--text-muted);">
           <em>Sedang menganalisis basis data Honda PGM-FI...</em>
@@ -1002,7 +1054,7 @@ async function sendChatMessage(text) {
     const botTime = new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
     container.insertAdjacentHTML('beforeend', `
       <div class="chat-msg msg-assistant">
-        <div class="msg-avatar">🏍️</div>
+        <div class="msg-avatar">TECH</div>
         <div class="msg-bubble">
           <div class="msg-author">WRT AI Master Technician</div>
           <div class="msg-content">${formatMarkdown(botReply)}</div>
@@ -1094,15 +1146,15 @@ function initPrinterView() {
 
       const json = await res.json();
       if (res.ok && json.success) {
-        showToast(`✅ ${json.message || 'ZPL berhasil dikirim ke printer!'}`, 'success');
+        showToast(`${json.message || 'ZPL berhasil dikirim ke printer!'}`, 'success');
       } else {
         throw new Error(json.message || `Gagal mengirim ke ${ip}:${port}`);
       }
     } catch (err) {
-      showToast(`❌ Error: ${err.message}`, 'danger');
+      showToast(`Error: ${err.message}`, 'danger');
     } finally {
       btnSendZplNet.disabled = false;
-      btnSendZplNet.innerHTML = '<span>🌐</span> Kirim ZPL ke IP Printer';
+      btnSendZplNet.innerHTML = 'Kirim ZPL ke IP Printer';
     }
   });
 
@@ -1181,7 +1233,7 @@ function initPrinterView() {
           window.location.href = `rawbt:data:text/plain;base64,${base64Data}`;
           return;
         } else {
-          throw new Error('Perangkat adalah Bluetooth Classic SPP. Silakan gunakan tombol "⚡ Cetak via RawBT" atau buka di Zebra Print Station.');
+          throw new Error('Perangkat adalah Bluetooth Classic SPP. Silakan gunakan tombol "Cetak via RawBT" atau buka di Zebra Print Station.');
         }
       }
 
@@ -1221,7 +1273,7 @@ function initPrinterView() {
       // Allow printer buffer to complete physical printing before finishing
       await new Promise((r) => setTimeout(r, 800));
 
-      showToast(`✅ Berhasil mencetak ke printer Bluetooth ${device.name}!`, 'success');
+      showToast(`Berhasil mencetak ke printer Bluetooth ${device.name}`, 'success');
     } catch (err) {
       console.warn('Bluetooth print error:', err);
       showToast(`Bluetooth Print: ${err.message}`, 'danger');
@@ -1301,7 +1353,7 @@ function initPrinterView() {
       await writableStreamClosed;
       await port.close();
 
-      showToast('✅ Berhasil mengirim stream ZPL via USB Serial!', 'success');
+      showToast('Berhasil mengirim stream ZPL via USB Serial', 'success');
     } catch (err) {
       console.warn('Serial print error:', err);
       showToast(`USB Print: ${err.message}`, 'danger');
@@ -1321,14 +1373,14 @@ function initPrinterView() {
     a.download = filename;
     a.click();
     URL.revokeObjectURL(url);
-    showToast(`File ${filename} berhasil diunduh!`, 'success');
+    showToast(`File ${filename} berhasil diunduh`, 'success');
   });
 
   // Copy ZPL Code
   const handleCopyZpl = () => {
     const zpl = generateCurrentZPL();
     navigator.clipboard.writeText(zpl).then(() => {
-      showToast('📋 Kode ZPL II berhasil disalin ke clipboard!', 'success');
+      showToast('Kode ZPL II berhasil disalin ke clipboard', 'success');
     }).catch(() => {
       showToast('Gagal menyalin kode ZPL', 'danger');
     });
@@ -1680,11 +1732,11 @@ function updateReceiptPreview() {
       dtcContainer.innerHTML = state.activeDTCs.map((d) => `
         <div class="r-dtc-item">
           <div><strong>[${d.code}] ${d.name.toUpperCase()}</strong></div>
-          <div>Status: 🔴 AKTIF ${d.code === 'P0113' ? '(9 KEDIPAN)' : ''}</div>
+          <div>Status: AKTIF ${d.code === 'P0113' ? '(9 KEDIPAN MIL)' : ''}</div>
         </div>
       `).join('');
     } else {
-      dtcContainer.innerHTML = '<div class="r-dtc-item"><div><strong>[ECM NORMAL]</strong></div><div>Status: ✅ TIDAK ADA KODE ERROR</div></div>';
+      dtcContainer.innerHTML = '<div class="r-dtc-item"><div><strong>[ECM NORMAL]</strong></div><div>Status: TIDAK ADA KODE ERROR</div></div>';
     }
   }
 
@@ -1694,7 +1746,7 @@ function updateReceiptPreview() {
     telemContainer.innerHTML = `
       <div>RPM : ${state.sensors.rpm.toLocaleString('id-ID')} rpm</div>
       <div>ECT : ${state.sensors.ect_celsius} °C</div>
-      <div>IAT : ${state.sensors.iat_celsius} °C ${state.sensors.iat_celsius <= -30 ? '(⚠)' : ''}</div>
+      <div>IAT : ${state.sensors.iat_celsius} °C ${state.sensors.iat_celsius <= -30 ? '(ANOMALI)' : ''}</div>
       <div>TPS : ${state.sensors.tps_volt} V</div>
       <div>VBAT: ${state.sensors.battery_volt} V</div>
       <div>MAP : ${state.sensors.map_kpa} kPa</div>
@@ -1821,7 +1873,7 @@ function sendTerminalHex(hex) {
 
   const time = new Date().toLocaleTimeString('id-ID');
   screen.insertAdjacentHTML('beforeend', `
-    <div class="term-line term-tx"><span class="term-time">${time}</span> TX ➔ ${hex}</div>
+    <div class="term-line term-tx"><span class="term-time">${time}</span> TX -> ${hex}</div>
   `);
 
   // Simulate responses
@@ -1835,7 +1887,7 @@ function sendTerminalHex(hex) {
     else if (clean.startsWith('72050400')) rx = '02 04 04 00 F6 (ECM Cleared)';
 
     screen.insertAdjacentHTML('beforeend', `
-      <div class="term-line term-rx"><span class="term-time">${new Date().toLocaleTimeString('id-ID')}</span> RX 🠔 ${rx}</div>
+      <div class="term-line term-rx"><span class="term-time">${new Date().toLocaleTimeString('id-ID')}</span> RX <- ${rx}</div>
     `);
     screen.scrollTop = screen.scrollHeight;
   }, 120);

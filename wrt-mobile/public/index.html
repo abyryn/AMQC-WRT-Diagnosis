@@ -17,9 +17,9 @@
     <header class="top-header" id="topHeader">
       <div class="header-brand">
         <div class="logo-badge">
-          <span class="logo-icon">🏍️</span>
+          <span class="logo-icon">WRT</span>
           <div class="brand-text">
-            <h1 class="brand-title">WRT DIAGNOSIS Agent AI</h1>
+            <h1 class="brand-title">WRT DIAGNOSIS SYSTEM</h1>
             <span class="brand-subtitle">HONDA PGM-FI AI DIAGNOSTIC v2.0</span>
           </div>
         </div>
@@ -60,7 +60,7 @@
 
         <!-- Simulation Toggle -->
         <button id="simToggleBtn" class="pill-btn active" title="Toggle Live Telemetry Simulation">
-          <span class="btn-icon">⚡</span> <span id="simToggleText">Simulasi: ON</span>
+          <span id="simToggleText">Simulasi: ON</span>
         </button>
       </div>
     </header>
@@ -74,34 +74,29 @@
         <ul class="nav-menu">
           <li class="nav-item">
             <button class="nav-link active" data-target="view-dashboard" id="navDashboard">
-              <span class="nav-icon">📊</span>
               <span class="nav-label">Dashboard</span>
             </button>
           </li>
           <li class="nav-item">
             <button class="nav-link" data-target="view-livedata" id="navLiveData">
-              <span class="nav-icon">⚡</span>
               <span class="nav-label">Live Telemetri</span>
               <span class="nav-badge" id="sensorCountBadge">14 Ch</span>
             </button>
           </li>
           <li class="nav-item">
             <button class="nav-link" data-target="view-dtc" id="navDtc">
-              <span class="nav-icon">⚠️</span>
               <span class="nav-label">DTC & Freeze Frame</span>
-              <span class="nav-badge alert-badge" id="dtcAlertBadge">2 DTC</span>
+              <span class="nav-badge alert-badge" id="dtcAlertBadge">0 DTC</span>
             </button>
           </li>
           <li class="nav-item">
             <button class="nav-link highlight-nav" data-target="view-ai" id="navAi">
-              <span class="nav-icon">🧠</span>
               <span class="nav-label">3-Layer AI Studio</span>
               <span class="nav-badge ai-badge">AI 2.5</span>
             </button>
           </li>
           <li class="nav-item">
             <button class="nav-link" data-target="view-chat" id="navChat">
-              <span class="nav-icon">💬</span>
               <span class="nav-label">Asisten WRT AI</span>
             </button>
           </li>
@@ -111,25 +106,21 @@
         <ul class="nav-menu">
           <li class="nav-item">
             <button class="nav-link" data-target="view-printer" id="navPrinter">
-              <span class="nav-icon">🖨️</span>
               <span class="nav-label">Cetak Struk Thermal</span>
             </button>
           </li>
           <li class="nav-item">
             <button class="nav-link" data-target="view-database" id="navDatabase">
-              <span class="nav-icon">🏍️</span>
               <span class="nav-label">Database ECU Honda</span>
             </button>
           </li>
           <li class="nav-item">
             <button class="nav-link" data-target="view-terminal" id="navTerminal">
-              <span class="nav-icon">🖥️</span>
               <span class="nav-label">Terminal K-Line HEX</span>
             </button>
           </li>
           <li class="nav-item">
             <button class="nav-link" data-target="view-sessions" id="navSessions">
-              <span class="nav-icon">📁</span>
               <span class="nav-label">Riwayat Servis</span>
             </button>
           </li>
@@ -159,7 +150,6 @@
           <div class="hero-status-card">
             <div class="hero-left">
               <div class="vehicle-hero-badge">
-                <span class="hero-bike-icon">🏍️</span>
                 <div>
                   <h2 class="hero-bike-name" id="heroBikeName">Honda PCX 160 eSP+ (2023)</h2>
                   <div class="hero-meta-tags">
@@ -174,13 +164,13 @@
             <div class="hero-right">
               <div class="hero-quick-actions">
                 <button class="btn btn-primary" id="btnQuickAiDiagnose">
-                  <span>🧠</span> Jalankan AI Diagnosis
+                  Jalankan AI Diagnosis
                 </button>
                 <button class="btn btn-secondary" id="btnQuickClearDtc">
-                  <span>🔄</span> Clear DTC & MIL
+                  Clear DTC & MIL
                 </button>
                 <button class="btn btn-outline" id="btnQuickPrint">
-                  <span>🖨️</span> Cetak Struk
+                  Cetak Struk
                 </button>
               </div>
             </div>
@@ -188,17 +178,17 @@
 
           <!-- Active DTC Urgent Alert Banner -->
           <div class="dtc-banner alert-warning-banner" id="dtcBanner">
-            <div class="dtc-banner-icon">⚠️</div>
+            <div class="dtc-banner-icon">[!]</div>
             <div class="dtc-banner-content">
               <div class="dtc-banner-title">
-                <strong>Peringatan Kerusakan Terdeteksi (2 Kode DTC Aktif)</strong>
+                <strong>Peringatan Kerusakan Terdeteksi (Kode DTC Aktif)</strong>
               </div>
               <div class="dtc-banner-codes" id="dtcBannerCodes">
-                <span class="dtc-chip chip-critical" title="Intake Air Temperature Sensor High Input">🔴 P0113 (IAT Sensor Open / High Input)</span>
-                <span class="dtc-chip chip-warning" title="Battery Voltage Low">🟡 P0562 (Battery Voltage Low)</span>
+                <span class="dtc-chip chip-critical" title="Intake Air Temperature Sensor High Input">P0113 (IAT Sensor Open / High Input)</span>
+                <span class="dtc-chip chip-warning" title="Battery Voltage Low">P0562 (Battery Voltage Low)</span>
               </div>
             </div>
-            <button class="btn btn-sm btn-light" id="btnBannerDiagnose">Analisis Solusi AI ➔</button>
+            <button class="btn btn-sm btn-light" id="btnBannerDiagnose">Analisis Solusi AI</button>
           </div>
 
           <!-- Real-Time Gauge Cluster Grid -->
@@ -288,7 +278,7 @@
           <div class="mini-metrics-row">
             <div class="mini-card">
               <span class="mini-title">Suhu Udara (IAT)</span>
-              <span class="mini-value text-danger" id="dashIatVal">-40 °C ⚠️</span>
+              <span class="mini-value text-danger" id="dashIatVal">-40 °C</span>
               <span class="mini-note text-danger">Open Circuit Detected</span>
             </div>
             <div class="mini-card">
@@ -322,11 +312,11 @@
           <div class="panel-card chart-preview-card">
             <div class="panel-header">
               <div class="panel-title-group">
-                <h3 class="panel-title">📈 Live Oscilloscope Waveform (RPM & TPS Realtime)</h3>
+                <h3 class="panel-title">Live Oscilloscope Waveform (RPM & TPS Realtime)</h3>
                 <span class="panel-subtitle">Stream sampling 20 Hz dari ECU via ESP32 K-Line</span>
               </div>
               <div class="panel-actions">
-                <button class="btn btn-sm btn-secondary" id="btnGoToLiveData">Buka Telemetri Penuh ➔</button>
+                <button class="btn btn-sm btn-secondary" id="btnGoToLiveData">Buka Telemetri Penuh</button>
               </div>
             </div>
             <div class="canvas-wrapper">
@@ -342,15 +332,15 @@
         <section id="view-livedata" class="content-view">
           <div class="view-header-row">
             <div>
-              <h2 class="view-title">⚡ Live Sensor Telemetry (14 Channels)</h2>
+              <h2 class="view-title">Live Sensor Telemetry (14 Channels)</h2>
               <p class="view-subtitle">Monitoring parameter sensor ECU Honda PGM-FI secara real-time dengan validasi ambang batas pabrikan.</p>
             </div>
             <div class="view-header-actions">
               <button class="btn btn-secondary" id="btnPauseTelemetry">
-                <span id="btnPauseIcon">⏸️</span> <span id="btnPauseText">Pause Stream</span>
+                <span id="btnPauseText">Pause Stream</span>
               </button>
               <button class="btn btn-secondary" id="btnExportCsv">
-                <span>📥</span> Export Telemetry CSV
+                Export Telemetry CSV
               </button>
               <div class="sim-dropdown-wrapper">
                 <select id="simScenarioSelect" class="custom-select">
@@ -395,15 +385,15 @@
         <section id="view-dtc" class="content-view">
           <div class="view-header-row">
             <div>
-              <h2 class="view-title">⚠️ DTC Fault Codes & Freeze Frame Snapshot</h2>
+              <h2 class="view-title">DTC Fault Codes & Freeze Frame Snapshot</h2>
               <p class="view-subtitle">Pembacaan memori kerusakan ECU, status MIL (lampu indikator injeksi), dan data snapshot saat error terpicu.</p>
             </div>
             <div class="view-header-actions">
               <button class="btn btn-danger" id="btnClearDtcMain">
-                <span>🔄</span> Reset ECU / Clear All DTC
+                Reset ECU / Clear All DTC
               </button>
               <button class="btn btn-primary" id="btnDiagnoseDtcList">
-                <span>🧠</span> Analisis Semua DTC dengan AI
+                Analisis Semua DTC dengan AI
               </button>
             </div>
           </div>
@@ -415,7 +405,7 @@
               <div class="panel-card">
                 <div class="panel-header">
                   <h3 class="panel-title">Daftar DTC Terdeteksi</h3>
-                  <span class="badge-status status-danger" id="dtcActiveCountBadge">2 Aktif</span>
+                  <span class="badge-status status-success" id="dtcActiveCountBadge">0 Aktif</span>
                 </div>
                 
                 <div class="dtc-items-wrapper" id="dtcItemsContainer">
@@ -423,7 +413,7 @@
                   <div class="dtc-item-card selected" data-dtc="P0113">
                     <div class="dtc-item-header">
                       <span class="dtc-code-badge badge-critical">P0113</span>
-                      <span class="dtc-mil-status">🔴 MIL ON (9 Kedipan)</span>
+                      <span class="dtc-mil-status mil-active">MIL ON (9 Kedipan)</span>
                     </div>
                     <div class="dtc-item-name">Intake Air Temperature Sensor High Input</div>
                     <div class="dtc-item-meta">
@@ -436,7 +426,7 @@
                   <div class="dtc-item-card" data-dtc="P0562">
                     <div class="dtc-item-header">
                       <span class="dtc-code-badge badge-warning">P0562</span>
-                      <span class="dtc-mil-status">🟡 MIL ON</span>
+                      <span class="dtc-mil-status mil-warning">MIL ON</span>
                     </div>
                     <div class="dtc-item-name">Battery Voltage Low</div>
                     <div class="dtc-item-meta">
@@ -495,7 +485,7 @@
 
                   <!-- Freeze Frame Data Table -->
                   <div class="freeze-frame-section">
-                    <h4 class="section-subtitle">📸 Freeze Frame Data (Snapshot Saat DTC Terpicu)</h4>
+                    <h4 class="section-subtitle">Freeze Frame Data (Snapshot Saat DTC Terpicu)</h4>
                     <div class="freeze-table-grid" id="freezeTableGrid">
                       <div class="freeze-item">
                         <span class="freeze-lbl">RPM saat Trigger</span>
@@ -526,7 +516,7 @@
 
                   <!-- Causes and Check Steps -->
                   <div class="dtc-causes-section">
-                    <h4 class="section-subtitle">🔍 Kemungkinan Penyebab:</h4>
+                    <h4 class="section-subtitle">Kemungkinan Penyebab:</h4>
                     <ul class="bullet-list" id="dtcCausesList">
                       <li>Soket kabel sensor IAT kotor, basah setelah cuci motor, atau terlepas dari filternya.</li>
                       <li>Kabel sinyal Gray/Blue putus di tengah harness menuju ECM.</li>
@@ -534,7 +524,7 @@
                       <li>Kerusakan internal sirkuit ground sinyal ECM.</li>
                     </ul>
 
-                    <h4 class="section-subtitle">🛠️ Prosedur Pengecekan Mekanik:</h4>
+                    <h4 class="section-subtitle">Prosedur Pengecekan Mekanik:</h4>
                     <ol class="ordered-list" id="dtcStepsList">
                       <li>Periksa kondisi fisik soket 2-pin sensor IAT pada housing filter udara.</li>
                       <li>Ukur resistansi sensor IAT (Standar pada 20°C: 2.0 - 3.0 kΩ; pada 40°C: 1.0 - 1.5 kΩ).</li>
@@ -556,11 +546,11 @@
         <section id="view-ai" class="content-view">
           <div class="view-header-row">
             <div>
-              <h2 class="view-title">🧠 3-Layer AI Diagnosis Studio</h2>
+              <h2 class="view-title">3-Layer AI Diagnosis Studio</h2>
               <p class="view-subtitle">Engine kecerdasan buatan terintegrasi: Rule Engine (L1) + Knowledge Base Sensor (L2) + AI Reasoning Master Technician (L3).</p>
             </div>
             <div class="view-header-actions">
-              <span class="ai-model-tag">Model: Google Gemini 2.5 Flash / WRT Engine v2.0</span>
+              <span class="ai-model-tag">Model: Google Gemini 3.6 Flash / WRT Engine v2.0</span>
             </div>
           </div>
 
@@ -574,6 +564,25 @@
                 </div>
 
                 <form id="aiDiagnosisForm" class="ai-form">
+                  <!-- Preset Selection Bar -->
+                  <div class="preset-scenario-bar">
+                    <span class="preset-label">Pilih Kondisi Motor:</span>
+                    <div class="preset-buttons-group">
+                      <button type="button" class="preset-btn active" id="btnPresetNormal" data-preset="normal">
+                        <span>Normal & Sehat</span>
+                      </button>
+                      <button type="button" class="preset-btn" id="btnPresetFaultIat" data-preset="fault_iat">
+                        <span>Fault IAT (-40°C)</span>
+                      </button>
+                      <button type="button" class="preset-btn" id="btnPresetFaultOverheat" data-preset="fault_overheat">
+                        <span>Fault Overheat</span>
+                      </button>
+                      <button type="button" class="preset-btn" id="btnPresetFaultBattery" data-preset="fault_battery">
+                        <span>Fault Aki Drop</span>
+                      </button>
+                    </div>
+                  </div>
+
                   <div class="form-group">
                     <label for="aiMotorModel">Tipe Motor Honda:</label>
                     <input type="text" id="aiMotorModel" class="custom-input" value="Honda PCX 160 eSP+ (K1Z - 2023)" readonly>
@@ -592,7 +601,7 @@
 
                   <div class="form-group">
                     <label for="aiComplaint">Keluhan Pemilik Motor / Gejala:</label>
-                    <textarea id="aiComplaint" class="custom-textarea" rows="3" placeholder="Contoh: Tarikan gas awal brebet dan tersendat saat RPM 2500, lampu MIL berkedip saat hujan...">Motor brebet saat digas di tarikan awal, lampu MIL berkedip 9 kali setelah terkena hujan, dan konsumsi bensin terasa lebih boros.</textarea>
+                    <textarea id="aiComplaint" class="custom-textarea" rows="3" placeholder="Contoh: Tarikan gas awal brebet dan tersendat saat RPM 2500, lampu MIL berkedip saat hujan...">Motor dalam kondisi sehat dan halus, tidak ada lampu MIL berkedip. Ingin cek kesehatan sistem sensor PGM-FI secara berkala.</textarea>
                   </div>
 
                   <div class="checkbox-group">
@@ -614,8 +623,8 @@
                   </div>
 
                   <button type="submit" class="btn btn-primary btn-block btn-lg" id="btnRunAiDiagnosis">
-                    <span class="spinner-icon hidden" id="aiSpinner">⏳</span>
-                    <span id="btnRunAiText">🚀 Jalankan 3-Layer AI Diagnosis</span>
+                    <span class="spinner-icon hidden" id="aiSpinner"></span>
+                    <span id="btnRunAiText">Jalankan 3-Layer AI Diagnosis</span>
                   </button>
                 </form>
               </div>
@@ -623,14 +632,42 @@
 
             <!-- Right Diagnosis Output Result -->
             <div class="ai-output-column">
-              <div class="panel-card ai-result-card" id="aiResultCard">
+              <!-- Initial Empty State Placeholder -->
+              <div class="panel-card ai-empty-state-card" id="aiEmptyState">
+                <div class="ai-empty-content">
+                  <div class="ai-empty-icon-wrapper">
+                    <span class="ai-empty-icon">SYSTEM</span>
+                  </div>
+                  <h3 class="ai-empty-title">Menunggu Perintah Diagnosis</h3>
+                  <p class="ai-empty-desc">
+                    Hasil diagnosis AI belum ditampilkan. Silakan tentukan parameter diagnosis pada form di sebelah kiri, lalu tekan tombol <strong>"Jalankan 3-Layer AI Diagnosis"</strong> untuk memulai analisis kecerdasan buatan.
+                  </p>
+                  <div class="ai-empty-info-box">
+                    <div class="info-item">
+                      <div class="info-text">
+                        <strong>Analisis 3-Layer Realtime</strong>
+                        <span>Mengintegrasikan Rule Engine (L1), Knowledge Base Sensor (L2), dan AI Master Technician (L3).</span>
+                      </div>
+                    </div>
+                    <div class="info-item">
+                      <div class="info-text">
+                        <strong>Akurasi Presisi Bengkel Resmi</strong>
+                        <span>Menghasilkan diagnosa penyebab utama, tingkat risiko, langkah perbaikan, dan rekomendasi keselamatan.</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- AI Result Card (Hidden until diagnosis button is clicked) -->
+              <div class="panel-card ai-result-card hidden" id="aiResultCard">
                 <div class="panel-header">
                   <div class="panel-title-group">
-                    <h3 class="panel-title">📋 Hasil Analisis AI Master Technician</h3>
+                    <h3 class="panel-title">Hasil Analisis AI Master Technician</h3>
                     <span class="panel-subtitle" id="aiResultMeta">Latency: 820ms • 3-Layers Verified</span>
                   </div>
                   <div id="aiRiskBadgeContainer">
-                    <span class="risk-badge risk-medium" id="aiRiskBadge">⚠️ MEDIUM RISK</span>
+                    <span class="risk-badge risk-medium" id="aiRiskBadge">MEDIUM RISK</span>
                   </div>
                 </div>
 
@@ -646,7 +683,6 @@
                   <!-- Primary Cause with Confidence -->
                   <div class="ai-section">
                     <div class="ai-section-title-row">
-                      <span class="ai-sec-icon">🎯</span>
                       <h4 class="ai-sec-title">Penyebab Utama yang Paling Mungkin:</h4>
                       <span class="confidence-pill" id="aiConfidencePill">Keyakinan: 92%</span>
                     </div>
@@ -665,7 +701,6 @@
                   <!-- Alternative Causes -->
                   <div class="ai-section">
                     <div class="ai-section-title-row">
-                      <span class="ai-sec-icon">🔄</span>
                       <h4 class="ai-sec-title">Kemungkinan Alternatif:</h4>
                     </div>
                     <div class="alt-causes-grid" id="aiAltCausesGrid">
@@ -683,7 +718,6 @@
                   <!-- Step by Step Diagnostic Guide -->
                   <div class="ai-section">
                     <div class="ai-section-title-row">
-                      <span class="ai-sec-icon">🛠️</span>
                       <h4 class="ai-sec-title">Panduan Langkah Perbaikan untuk Mekanik:</h4>
                     </div>
                     <ol class="step-guide-list" id="aiCheckStepsList">
@@ -697,7 +731,7 @@
 
                   <!-- Safety Warning Callout -->
                   <div class="safety-warning-callout" id="aiSafetyCallout">
-                    <div class="safety-icon">⚠️</div>
+                    <div class="safety-icon">[!]</div>
                     <div class="safety-text" id="aiSafetyText">
                       <strong>Peringatan Keselamatan:</strong> Pastikan kunci kontak selalu dalam posisi OFF saat mencabut atau memasang soket sensor/ECM untuk menghindari lonjakan voltase yang dapat merusak mikrokontroler ECM.
                     </div>
@@ -706,7 +740,7 @@
                   <!-- AI Result Action Buttons -->
                   <div class="ai-result-actions">
                     <button class="btn btn-primary" id="btnTransferToPrinter">
-                      <span>🖨️</span> Cetak Struk Hasil Diagnosis
+                      Cetak Struk Hasil Diagnosis
                     </button>
                     <div class="feedback-container">
                       <span>Beri Rating Hasil AI:</span>
@@ -734,7 +768,7 @@
         <section id="view-chat" class="content-view">
           <div class="view-header-row">
             <div>
-              <h2 class="view-title">💬 Asisten WRT AI Master Technician</h2>
+              <h2 class="view-title">Asisten WRT AI Master Technician</h2>
               <p class="view-subtitle">Konsultasi interaktif seputar diagnosis PGM-FI, kedipan MIL, spesifikasi sensor, dan panduan perbaikan motor Honda.</p>
             </div>
             <div class="view-header-actions">
@@ -758,7 +792,7 @@
             <div class="chat-messages-container" id="chatMessagesContainer">
               <!-- Welcome Bot Message -->
               <div class="chat-msg msg-assistant">
-                <div class="msg-avatar">🏍️</div>
+                <div class="msg-avatar">TECH</div>
                 <div class="msg-bubble">
                   <div class="msg-author">WRT AI Master Technician</div>
                   <div class="msg-content">
@@ -775,7 +809,7 @@
             <form id="chatForm" class="chat-input-form">
               <input type="text" id="chatInputText" class="custom-input chat-input" placeholder="Tanyakan pertanyaan teknis seputar Honda PGM-FI..." autocomplete="off">
               <button type="submit" class="btn btn-primary" id="btnSendChat">
-                <span>Kirim</span> ➔
+                <span>Kirim</span>
               </button>
             </form>
           </div>
@@ -787,7 +821,7 @@
         <section id="view-printer" class="content-view">
           <div class="view-header-row">
             <div>
-              <h2 class="view-title">🖨️ Cetak Struk Diagnosis (Thermal ESC/POS & Zebra ZPL II)</h2>
+              <h2 class="view-title">Cetak Struk Diagnosis (Thermal ESC/POS & Zebra ZPL II)</h2>
               <p class="view-subtitle">Generate struk hasil scan diagnosis AI untuk pelanggan bengkel. Kompatibel dengan Mini Bluetooth POS 58mm/80mm dan Printer Zebra ZPL (iMZ220, ZQ320, ZQ520, ZD420, dll).</p>
             </div>
             <div class="view-header-actions">
@@ -802,7 +836,7 @@
                 </select>
               </div>
               <button class="btn btn-primary" id="btnPrintReceiptNow">
-                <span>🖨️</span> Cetak Sekarang
+                Cetak Sekarang
               </button>
             </div>
           </div>
@@ -857,7 +891,7 @@
               <div class="panel-card zebra-connect-card">
                 <div class="panel-header">
                   <div class="panel-title-group">
-                    <h3 class="panel-title">🌐 Koneksi Langsung Printer Zebra ZPL</h3>
+                    <h3 class="panel-title">Koneksi Langsung Printer Zebra ZPL</h3>
                     <span class="panel-subtitle">Kirim stream perintah ZPL via WiFi/LAN (Port 9100) atau Bluetooth</span>
                   </div>
                 </div>
@@ -876,25 +910,25 @@
 
                   <div class="printer-action-buttons">
                     <button class="btn btn-primary" id="btnSendZplNetwork">
-                      <span>🌐</span> Kirim ZPL ke IP Printer (LAN)
+                      Kirim ZPL ke IP Printer (LAN)
                     </button>
                     <button class="btn btn-secondary" id="btnSendZplBluetooth">
-                      <span>📶</span> Zebra BLE Bluetooth Print
+                      Zebra BLE Bluetooth Print
                     </button>
                     <button class="btn btn-warning" id="btnSendRawBT">
-                      <span>⚡</span> Cetak via RawBT (Classic SPP)
+                      Cetak via RawBT (Classic SPP)
                     </button>
                     <button class="btn btn-secondary" id="btnShareZpl">
-                      <span>📱</span> Buka di Zebra Print Station
+                      Buka di Zebra Print Station
                     </button>
                     <button class="btn btn-secondary" id="btnSendZplUsb">
-                      <span>🔌</span> Zebra USB Serial
+                      Zebra USB Serial
                     </button>
                     <button class="btn btn-outline" id="btnDownloadZpl">
-                      <span>📥</span> Download .ZPL
+                      Download .ZPL
                     </button>
                     <button class="btn btn-outline" id="btnCopyZpl">
-                      <span>📋</span> Salin Kode ZPL
+                      Salin Kode ZPL
                     </button>
                   </div>
                 </div>
@@ -904,8 +938,8 @@
             <!-- Right Side: Dual Mode Preview (Label Visual & ZPL Raw Code) -->
             <div class="printer-preview-column">
               <div class="preview-mode-switch-bar">
-                <button class="preview-tab-btn active" id="tabVisualReceipt">📄 Preview Struk Fisik</button>
-                <button class="preview-tab-btn" id="tabRawZpl">💻 Kode Zebra ZPL II</button>
+                <button class="preview-tab-btn active" id="tabVisualReceipt">Preview Struk Fisik</button>
+                <button class="preview-tab-btn" id="tabRawZpl">Kode Zebra ZPL II</button>
               </div>
 
               <!-- Visual Receipt Simulated Preview -->
@@ -933,7 +967,7 @@
                   <div class="receipt-dtc-list" id="rtDtcList">
                     <div class="r-dtc-item">
                       <div><strong>[P0113] IAT SENSOR HIGH</strong></div>
-                      <div>Status: 🔴 AKTIF (9 KEDIPAN MIL)</div>
+                      <div>Status: AKTIF (9 KEDIPAN MIL)</div>
                     </div>
                   </div>
 
@@ -943,7 +977,7 @@
                   <div class="receipt-telemetry-grid" id="rtTelemetryGrid">
                     <div>RPM : 1,450 rpm</div>
                     <div>ECT : 88 °C</div>
-                    <div>IAT : -40 °C (⚠)</div>
+                    <div>IAT : -40 °C</div>
                     <div>TPS : 0.48 V</div>
                     <div>VBAT: 11.8 V</div>
                     <div>MAP : 34.2 kPa</div>
@@ -976,11 +1010,11 @@
               <div class="raw-zpl-container hidden" id="rawZplContainer">
                 <div class="zpl-viewer-header">
                   <span class="zpl-viewer-title">Zebra Programming Language (ZPL II Stream)</span>
-                  <button class="btn btn-sm btn-outline" id="btnCopyZplInner">📋 Copy ZPL</button>
+                  <button class="btn btn-sm btn-outline" id="btnCopyZplInner">Copy ZPL</button>
                 </div>
                 <textarea id="rawZplCodeArea" class="zpl-code-area" spellcheck="false" rows="24"></textarea>
                 <div class="zpl-tips">
-                  💡 <strong>Tip Mekanik:</strong> Kode ZPL di atas dapat dikirim langsung ke printer Zebra melalui port 9100, Bluetooth SPP, atau di-paste ke software Zebra Setup Utilities.
+                  <strong>Tip Mekanik:</strong> Kode ZPL di atas dapat dikirim langsung ke printer Zebra melalui port 9100, Bluetooth SPP, atau di-paste ke software Zebra Setup Utilities.
                 </div>
               </div>
 
@@ -995,7 +1029,7 @@
         <section id="view-database" class="content-view">
           <div class="view-header-row">
             <div>
-              <h2 class="view-title">🏍️ Database ECU & Model Motor Honda Terverifikasi</h2>
+              <h2 class="view-title">Database ECU & Model Motor Honda Terverifikasi</h2>
               <p class="view-subtitle">Katalog referensi lengkap nomor part ECU, pabrikan (Keihin / Shindengen), protokol K-Line, dan inisialisasi pinout.</p>
             </div>
             <div class="view-header-actions">
@@ -1031,7 +1065,7 @@
         <section id="view-terminal" class="content-view">
           <div class="view-header-row">
             <div>
-              <h2 class="view-title">🖥️ Terminal Komunikasi K-Line (Raw HEX Console)</h2>
+              <h2 class="view-title">Terminal Komunikasi K-Line (Raw HEX Console)</h2>
               <p class="view-subtitle">Kirim dan terima frame biner HEX langsung ke mikrokontroler ECU Honda via serial UART2 ESP32 (10400 bps).</p>
             </div>
             <div class="view-header-actions">
@@ -1046,15 +1080,15 @@
               <div class="terminal-screen" id="terminalScreen">
                 <div class="term-line term-info">[SYSTEM] WRT Hardware Adapter Connected to UART2 (GPIO16/GPIO17) @ 10400 bps</div>
                 <div class="term-line term-info">[SYSTEM] Fast Init ISO 14230 Sequence: 25ms LOW Pulse -> 25ms HIGH -> WUR Frame</div>
-                <div class="term-line term-tx"><span class="term-time">12:00:01</span> TX ➔ 72 05 00 00 89 (Fast Init Wakeup)</div>
-                <div class="term-line term-rx"><span class="term-time">12:00:02</span> RX 🠔 02 04 00 7F D5 (ECU ACK OK)</div>
-                <div class="term-line term-tx"><span class="term-time">12:00:03</span> TX ➔ 72 05 71 00 18 (Read DTC Request)</div>
-                <div class="term-line term-rx"><span class="term-time">12:00:03</span> RX 🠔 02 06 71 01 13 05 62 A2 (DTC P0113, P0562)</div>
+                <div class="term-line term-tx"><span class="term-time">12:00:01</span> TX -> 72 05 00 00 89 (Fast Init Wakeup)</div>
+                <div class="term-line term-rx"><span class="term-time">12:00:02</span> RX <- 02 04 00 7F D5 (ECU ACK OK)</div>
+                <div class="term-line term-tx"><span class="term-time">12:00:03</span> TX -> 72 05 71 00 18 (Read DTC Request)</div>
+                <div class="term-line term-rx"><span class="term-time">12:00:03</span> RX <- 02 06 71 01 13 05 62 A2 (DTC P0113, P0562)</div>
               </div>
 
               <!-- Terminal Input Box -->
               <form id="terminalForm" class="terminal-input-bar">
-                <span class="term-prompt">HEX ➔</span>
+                <span class="term-prompt">HEX -></span>
                 <input type="text" id="terminalInputHex" class="custom-input term-input" placeholder="72 05 71 00 18" value="72 05 71 00 18">
                 <button type="submit" class="btn btn-primary" id="btnSendHex">Kirim Frame</button>
               </form>
@@ -1100,12 +1134,12 @@
         <section id="view-sessions" class="content-view">
           <div class="view-header-row">
             <div>
-              <h2 class="view-title">📁 Riwayat Sesi Servis & Diagnosis Pelanggan</h2>
+              <h2 class="view-title">Riwayat Sesi Servis & Diagnosis Pelanggan</h2>
               <p class="view-subtitle">Catatan digital riwayat perbaikan motor, hasil analisis AI, sparepart yang diganti, dan rekam jejak pelanggan.</p>
             </div>
             <div class="view-header-actions">
               <button class="btn btn-primary" id="btnNewSession">
-                <span>➕</span> Buat Sesi Servis Baru
+                Buat Sesi Servis Baru
               </button>
             </div>
           </div>
