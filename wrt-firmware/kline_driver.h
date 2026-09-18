@@ -7,6 +7,7 @@
 
 #include <Arduino.h>
 #include "config.h"
+#include "ecu_data.h"
 
 class KLineDriver {
 public:

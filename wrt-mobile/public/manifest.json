@@ -1,0 +1,24 @@
+{
+  "name": "WRT DIAGNOSIS SYSTEM — Honda PGM-FI AI Diagnostic Tool v2.0",
+  "short_name": "WRT Garage",
+  "description": "Alat Diagnosis Cerdas Honda PGM-FI dengan 3-Layer AI Engine, K-Line Telemetri Realtime, dan Cetak Struk Thermal",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0c1017",
+  "theme_color": "#0c1017",
+  "orientation": "any",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
