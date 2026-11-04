@@ -10,6 +10,12 @@
 
 > **Tagline**: *"Diagnosis Honda seperti Master Teknisi — di genggaman tangan, dengan kecerdasan AI"*
 
+<p align="center">
+  <img src="docs/images/feature_dashboard.jpg" alt="WRT Garage Diagnostic Suite Dashboard" width="100%" />
+  <br>
+  <em>Antarmuka Terpadu WRT Garage — Monitoring Telemetri Real-Time, Analisis AI 3-Layer, dan Status ECU Honda PGM-FI</em>
+</p>
+
 **WRT Garage** adalah ekosistem alat diagnostik pintar generasi baru berbasis **AI 3-Layer Engine** dan sirkuit proteksi isolasi optocoupler **4N35 K-Line** untuk seluruh lini sepeda motor Honda PGM-FI (Programmed Fuel Injection). Sistem ini mengintegrasikan mikrokontroler ESP32, aplikasi mobile smartphone (Android/iOS), backend cloud berbasis Docker di VPS, printer struk thermal Bluetooth, serta model penalaran Large Language Model (LLM) mutakhir (Google Gemini 2.5 Flash / Claude 3.5 Sonnet melalui OpenRouter).
 
 ---
@@ -81,6 +87,27 @@ Untuk mengatasi permasalahan di atas, **WRT Garage** menghadirkan solusi teknolo
 
 ---
 
+## 📸 Galeri Fitur & Antarmuka Sistem
+
+Berikut ringkasan visual antarmuka aplikasi mobile dan perangkat keras **WRT Garage v2.0**:
+
+| 📊 Live Telemetri Sensor Real-Time | 🔍 DTC Scanner & Freeze Frame |
+|:---:|:---:|
+| <img src="docs/images/feature_live_telemetry.jpg" alt="Live Telemetri Sensor" width="100%"/> | <img src="docs/images/feature_dtc_scanner.jpg" alt="DTC Scanner & Freeze Frame" width="100%"/> |
+| *Streaming 14+ parameter sensor mesin, tachometer RPM dinamis, dan grafik respon throttle 5 Hz.* | *Deteksi kode gangguan aktif/tersimpan, snapshot data saat kejadian (Freeze Frame), & reset MIL.* |
+
+| 🧠 3-Layer AI Diagnostic Engine | 💬 AI Master Tech Chat Assistant |
+|:---:|:---:|
+| <img src="docs/images/feature_ai_diagnosis.jpg" alt="3-Layer AI Diagnosis" width="100%"/> | <img src="docs/images/feature_ai_chat.jpg" alt="AI Chat Assistant" width="100%"/> |
+| *Analisis akar masalah terstruktur, tingkat risiko, checklist inspeksi bertahap, & estimasi biaya part (IDR).* | *Konsultasi interaktif pemecahan kendala motor langsung dengan AI berbasis data telemetri aktual.* |
+
+| 🖨️ Cetak Struk Thermal Bluetooth | 🔌 Hardware Diagnostic Adapter ESP32 |
+|:---:|:---:|
+| <img src="docs/images/feature_thermal_receipt.jpg" alt="Cetak Struk Thermal" width="100%"/> | <img src="docs/images/feature_hardware_adapter.jpg" alt="Hardware Adapter ESP32" width="100%"/> |
+| *Cetak fisik struk diagnosis 58mm/80mm instan di depan pelanggan lengkap dengan QR Code digital.* | *Modul ESP32 dengan sirkuit isolasi optocoupler 4N35 K-Line & soket merah DLC Honda 4-pin.* |
+
+---
+
 ## 🚀 Katalog Lengkap Fitur & Cara Kerja
 
 Berikut adalah rincian fungsionalitas dan mekanisme operasional dari setiap fitur yang ada di ekosistem **WRT Garage**:
@@ -111,6 +138,12 @@ Berikut adalah rincian fungsionalitas dan mekanisme operasional dari setiap fitu
   5. ESP32 mem-parsing byte tersebut, memverifikasi *checksum*, dan mengirimkan daftar kode DTC ke smartphone.
   6. Aplikasi mobile melakukan pencocokan dengan database internal untuk menampilkan nama resmi sensor, kondisi kegagalan (*fault condition*), tingkat keparahan, serta status lampu MIL di speedometer motor.
 
+<p align="center">
+  <img src="docs/images/feature_dtc_scanner.jpg" alt="DTC Diagnostic Trouble Code Scanner & Freeze Frame" width="85%" />
+  <br>
+  <em>Tampilan Fitur DTC Scanner — Indikator MIL Aktif, Kode Kerusakan P0113/P0118, Snapshot Freeze Frame, dan Tombol Clear DTC</em>
+</p>
+
 ---
 
 ### 2. Clear / Reset DTC & Reset Indikator MIL
@@ -133,6 +166,12 @@ Berikut adalah rincian fungsionalitas dan mekanisme operasional dari setiap fitu
   3. Data mentah (*raw bytes*) dikonversi menggunakan formula transfer function karakteristik sensor Honda (misal: konversi nilai analog-to-digital menjadi derajat Celcius berdasarkan kurva NTC).
   4. Data yang telah diformat dimasukkan ke dalam antrean (*queue*) dan ditransmisikan via Bluetooth SPP/WebSocket ke aplikasi mobile.
   5. UI aplikasi mobile merender data sensor dalam bentuk kartu parameter interaktif, progress bar warna dinamis (hijau jika normal, merah jika berada di luar batas toleransi), serta grafik gelombang real-time.
+
+<p align="center">
+  <img src="docs/images/feature_live_telemetry.jpg" alt="Live Telemetri Sensor Monitoring" width="85%" />
+  <br>
+  <em>Tampilan Real-Time Live Telemetry — Tachometer RPM Dinamis, Status Kesehatan Sensor ECT/IAT/VB/TPS, dan Grafik Respon Real-Time</em>
+</p>
 
 ---
 
@@ -181,6 +220,12 @@ Berikut adalah rincian fungsionalitas dan mekanisme operasional dari setiap fitu
      - **Langkah Pengecekan Terurut (*Check Steps*)**: Urutan aksi mulai dari yang paling mudah (inspeksi soket, semprot contact cleaner) hingga yang membutuhkan alat ukur (multimeter) atau penggantian part.
      - **Estimasi Biaya Part**: Kisaran harga resmi dan aftermarket sparepart Honda di pasar Indonesia.
 
+<p align="center">
+  <img src="docs/images/feature_ai_diagnosis.jpg" alt="3-Layer AI Diagnostic Engine Report" width="85%" />
+  <br>
+  <em>Laporan Analisis AI 3-Layer — Indikasi Akar Masalah, Match Confidence 96%, Checklist Tindakan Mekanik, dan Estimasi Biaya Sparepart</em>
+</p>
+
 ---
 
 ### 6. Asisten Konsultasi AI Interaktif (AI Chat Assistant)
@@ -190,6 +235,12 @@ Berikut adalah rincian fungsionalitas dan mekanisme operasional dari setiap fitu
   2. Aplikasi menyertakan status motor saat ini (kode DTC yang sedang terdeteksi dan nilai sensor terkini) sebagai *context prompt*.
   3. Backend mengirimkan percakapan ke model LLM dengan persona *Honda Master Technician*.
   4. AI membalas dalam bahasa Indonesia yang praktis, aplikatif, dan langsung mengarah ke solusi teknis di lapangan.
+
+<p align="center">
+  <img src="docs/images/feature_ai_chat.jpg" alt="AI Chat Assistant Honda Master Tech" width="85%" />
+  <br>
+  <em>Fitur AI Chat Assistant — Konsultasi Troubleshooting Interaktif Bersama AI Berbasis Konteks Data Telemetri Motor Aktual</em>
+</p>
 
 ---
 
@@ -213,6 +264,12 @@ Berikut adalah rincian fungsionalitas dan mekanisme operasional dari setiap fitu
      - **Printer Industri Portabel Zebra**: Dikonversi menjadi kode label **Zebra ZPL II**.
   4. Data yang dicetak mencakup: Identitas Motor, Nomor Polisi, Part Number ECU, Daftar Kode DTC, Status Live Sensor, Rekomendasi AI & Estimasi Biaya, serta **QR Code Laporan Digital**.
   5. Perintah dikirim via Bluetooth SPP/BLE dan dicetak dalam hitungan detik.
+
+<p align="center">
+  <img src="docs/images/feature_thermal_receipt.jpg" alt="Cetak Struk Mini Thermal Printer" width="85%" />
+  <br>
+  <em>Cetak Struk Fisik Thermal 58mm via Bluetooth — Dokumen Transparansi Bengkel Dilengkapi Ringkasan AI & QR Code Laporan</em>
+</p>
 
 ---
 
@@ -271,6 +328,12 @@ Berikut adalah rincian fungsionalitas dan mekanisme operasional dari setiap fitu
   1. Jalur **RX (Penerimaan)**: Sinyal tegangan 12V dari jalur K-Line motor dialirkan ke LED inframerah internal di dalam IC optocoupler **4N35**. Kedipan cahaya inframerah tersebut ditangkap oleh fototransistor internal di sisi sekunder yang terhubung ke pin GPIO16 (RX) ESP32 pada level tegangan 3.3V.
   2. Jalur **TX (Pengiriman)**: Pin GPIO17 (TX) ESP32 memicu LED optocoupler 4N35 sisi pengirim yang kemudian menggerakkan transistor penarik (*pull-down*) pada jalur K-Line 12V motor.
   3. Dengan pemisahan sinyal melalui media cahaya (optik) ini, tidak ada kontak elektrikal tembaga langsung antara kelistrikan mesin motor dan ESP32, sehingga lonjakan tegangan (*voltage spike*) dari spul pengisian, alternator, maupun koil pengapian tidak akan pernah merusak mikrokontroler atau perangkat smartphone mekanik.
+
+<p align="center">
+  <img src="docs/images/feature_hardware_adapter.jpg" alt="ESP32 Diagnostic Hardware Adapter" width="85%" />
+  <br>
+  <em>Modul Adapter Hardware WRT Garage — Dilengkapi Isolasi Optocoupler 4N35, Status Indikator LED, dan Konektor DLC Honda 4-Pin Merah</em>
+</p>
 
 ---
 
@@ -358,6 +421,12 @@ AMQC-WRT-Diagnosis/
      ▼                     ▼
 ESP32 GPIO16 (RX)     ESP32 GPIO17 (TX)
 ```
+
+<p align="center">
+  <img src="docs/images/feature_hardware_adapter.jpg" alt="Implementasi Fisik Modul Hardware WRT Garage" width="85%" />
+  <br>
+  <em>Implementasi Fisik Modul ESP32 & Sirkuit Optocoupler 4N35 dengan Kabel DLC Honda PGM-FI</em>
+</p>
 
 ---
 
