@@ -170,12 +170,23 @@ bool ECUManager::readFreezeFrame(FreezeFrame* frame) {
 bool ECUManager::readECUInfo(ECUInfo* info) {
   if (!_kline.isConnected()) return false;
 
-  // Honda: Table 0x71, Sub 0x01 (ECU identification)
-  _kline.sendHondaRequest(HONDA_TABLE_ECU_INFO, 0x01);
+  // Honda Keihin: Table 0x71, Sub 0x00 (Request ECM ID [72 05 71 00 18])
+  _kline.sendHondaRequest(HONDA_TABLE_ECU_INFO, 0x00);
 
   uint8_t response[64];
   int rxLen = _kline.readHondaResponse(response, sizeof(response));
 
+  if (rxLen > 5) {
+    parseECUInfoResponse(response, rxLen, info);
+    info->connected = true;
+    info->protocol = 0; // K-Line
+    _lastActivity = millis();
+    return true;
+  }
+
+  // Fallback: Table 0x71, Sub 0x01
+  _kline.sendHondaRequest(HONDA_TABLE_ECU_INFO, 0x01);
+  rxLen = _kline.readHondaResponse(response, sizeof(response));
   if (rxLen > 5) {
     parseECUInfoResponse(response, rxLen, info);
     info->connected = true;

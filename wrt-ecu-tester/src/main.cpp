@@ -17,11 +17,13 @@
 #define LED_PIN           2     // Built-in LED (GPIO2)
 #define KLINE_BAUDRATE    10400 // Honda PGM-FI Standard Baudrate
 
-// ---- Protocol Timings ----
-#define FAST_INIT_LOW_MS  25    // ISO 14230-2: 25ms LOW
-#define FAST_INIT_HIGH_MS 25    // ISO 14230-2: 25ms HIGH
-#define FIVE_BAUD_BIT_MS  200   // ISO 9141-2: 5 bps = 200ms per bit
-#define KLINE_TIMEOUT_MS  1500  // Response timeout
+// ---- Protocol Timings (Honda Keihin Protocol - strategy.md) ----
+#define KEIHIN_INIT_LOW_MS  70    // Keihin Kline: Pin Tx = Low (70 ms)
+#define KEIHIN_INIT_HIGH_MS 120   // Keihin Kline: Pin Tx = High (120 ms)
+#define FAST_INIT_LOW_MS    KEIHIN_INIT_LOW_MS
+#define FAST_INIT_HIGH_MS   KEIHIN_INIT_HIGH_MS
+#define FIVE_BAUD_BIT_MS    200   // ISO 9141-2: 5 bps = 200ms per bit
+#define KLINE_TIMEOUT_MS    1500  // Response timeout
 
 // ---- Global State ----
 bool isUartInverted = false;
@@ -36,6 +38,7 @@ bool runFiveBaudInit();
 void runAutoDetect();
 void readEcuInfo();
 void readLiveData();
+void parseSensorTable(const uint8_t* rx, int rxLen, uint8_t tableId);
 void readDTC();
 void runBusSniffer();
 void sendCustomHex();
@@ -58,12 +61,12 @@ void printMenu() {
                 rxState ? "🟢 HIGH (3.3V - Standby Normal)" : "🔴 LOW (0V - 🚨 PERINGATAN: Terjepit Ground / Terbalik!)");
   Serial.printf(" [Status Mode Invert]  : %s\n", isUartInverted ? "ENABLED (Inverted Logic)" : "DISABLED (Standard 8N1)");
   Serial.println("----------------------------------------------------------");
-  Serial.println(" [1] Test Fast Init (ISO 14230-2) — Untuk BeAT, Vario, PCX, CB150R");
+  Serial.println(" [1] Test Init Honda Keihin (Sesuai strategy.md: 70ms/120ms, FE 04 72 8C)");
   Serial.println(" [2] Test 5-Baud Init (ISO 9141-2) — Untuk Supra X 125 FI KPH lama");
-  Serial.println(" [3] Auto-Detect Connection — Coba Fast Init lalu 5-Baud");
+  Serial.println(" [3] Auto-Detect Connection — Coba Keihin Init lalu 5-Baud");
   Serial.println(" [4] Self-Test Rangkaian Optocoupler (Diagnostik DC & Loopback)");
-  Serial.println(" [5] Baca Info ECU (Part Number & Manufacturer)");
-  Serial.println(" [6] Baca Live Data Sensor (RPM, TPS, ECT, IAT, Battery)");
+  Serial.println(" [5] Baca Request ECM ID (Table 71 Sub 00 — Sesuai strategy.md)");
+  Serial.println(" [6] Baca Live Data Sensor (Table 11 / Table 17 — Sesuai strategy.md)");
   Serial.println(" [7] Baca Diagnostic Trouble Code (DTC Fault Codes)");
   Serial.println(" [8] K-Line Bus Sniffer (Monitor lalu lintas data mentah)");
   Serial.println(" [9] Toggle UART Polarity Invert (Normal / Inverted)");
@@ -323,77 +326,132 @@ uint8_t calcHondaChecksum(const uint8_t* data, size_t len, bool twoComplement) {
 }
 
 // =============================================================================
-// TEST 1: FAST INIT (ISO 14230-2)
+// TEST 1: HONDA KEIHIN INIT (STEPS 1 - strategy.md)
 // =============================================================================
 bool runFastInit() {
-  Serial.println("\n>>> [1] MEMULAI FAST INIT (ISO 14230-2) <<<");
+  Serial.println("\n==========================================================");
+  Serial.println(">>> [1] MEMULAI HONDA KEIHIN INIT (SESUAI STRATEGY.MD) <<<");
+  Serial.println("==========================================================");
   digitalWrite(LED_PIN, HIGH);
 
-  // 1. Matikan UART sementara untuk bit-banging 25ms LOW + 25ms HIGH
-  Serial2.end();
-  delay(100);
+  const int MAX_RETRIES = 3;
 
-  pinMode(KLINE_TX_PIN, OUTPUT);
-  Serial.println("  [Step 1] Mengirim pulsa Wakeup: 25ms LOW...");
-  setKLinePinLow();
-  delay(FAST_INIT_LOW_MS);
+  for (int attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+    Serial.printf("\n--- Inisialisasi Keihin: Percobaan %d dari %d ---\n", attempt, MAX_RETRIES);
 
-  Serial.println("  [Step 2] Mengirim pulsa Wakeup: 25ms HIGH...");
-  setKLinePinHigh();
-  delay(FAST_INIT_HIGH_MS);
+    // 1. Pin Tx = Low (70 ms)
+    Serial2.end();
+    delay(50);
+    pinMode(KLINE_TX_PIN, OUTPUT);
+    Serial.println("  [Point 1] Pin Tx = Low (70 ms)...");
+    setKLinePinLow();
+    delay(KEIHIN_INIT_LOW_MS);
 
-  // 2. Aktifkan UART2 10400 bps
-  Serial.println("  [Step 3] Membuka UART2 10400 bps...");
-  initUart(KLINE_BAUDRATE, isUartInverted);
-  delay(25);
+    // 2. Pin Tx = High (120 ms)
+    Serial.println("  [Point 2] Pin Tx = High (120 ms)...");
+    setKLinePinHigh();
+    delay(KEIHIN_INIT_HIGH_MS);
 
-  // 3. Kirim Honda Fast Init Diagnostic Session Request:
-  // Format standar: 72 05 00 00 89 (atau FE 04 FF 01)
-  uint8_t initCmd1[] = { 0x72, 0x05, 0x00, 0x00, 0x89 }; // Format Honda HDS Wakeup
-  Serial.println("  [Step 4] Mengirim Honda Diagnostic Wakeup Packet [72 05 00 00 89]...");
+    // 3. Set Baudrate = 10400 bps
+    Serial.println("  [Point 3] Set Baudrate = 10400 bps...");
+    initUart(KLINE_BAUDRATE, isUartInverted);
+    delay(20);
 
-  bool echoOk = sendFrameWithEchoCheck(initCmd1, sizeof(initCmd1));
-  if (!echoOk) {
-    Serial.println("  [❌ GAGAL] Echo tidak terdeteksi. Sirkuit optocoupler/kabel K-Line bermasalah.");
-    digitalWrite(LED_PIN, LOW);
-    return false;
-  }
+    // 4. Wake Up with send to ECU code = FE 04 72 8C
+    const uint8_t wakeupCmd[] = { 0xFE, 0x04, 0x72, 0x8C };
+    Serial.println("  [Point 4] Wake Up: Kirim kode [FE 04 72 8C] ke ECU...");
+    if (!sendFrameWithEchoCheck(wakeupCmd, sizeof(wakeupCmd))) {
+      Serial.println("  [❌ GAGAL] Echo lokal Wake Up tidak terdeteksi. Periksa sirkuit optocoupler.");
+      if (attempt < MAX_RETRIES) {
+        Serial.println("  [SOP: Ulangi point 1] Menunggu 400ms sebelum mencoba kembali...");
+        delay(400);
+        continue;
+      } else {
+        break;
+      }
+    }
 
-  // 4. Tunggu respon dari ECU
-  Serial.println("  [Step 5] Menunggu respon dari ECU motor...");
-  uint8_t rxBuffer[64];
-  int rxLen = readResponse(rxBuffer, sizeof(rxBuffer), KLINE_TIMEOUT_MS);
+    // 5. ECU Response with code = 0E 04 72 7C
+    Serial.println("  [Point 5] Menunggu respon Wake Up dari ECU (target: 0E 04 72 7C)...");
+    uint8_t rxBuffer[64];
+    int rxLen = readResponse(rxBuffer, sizeof(rxBuffer), KLINE_TIMEOUT_MS);
 
-  if (rxLen > 0) {
+    if (rxLen <= 0) {
+      Serial.println("  [❌ TIMEOUT] Tidak ada respon dari ECU untuk kode Wake Up.");
+      if (attempt < MAX_RETRIES) {
+        Serial.println("  [SOP: Ulangi point 1 jika tidak ada respon] Mengulang prosedur inisialisasi...");
+        delay(400);
+        continue;
+      } else {
+        break;
+      }
+    }
+
     printHex("RX ⬅️", rxBuffer, rxLen);
-    Serial.println("  [✅ SUKSES!] ECU MERESPON WAKEUP FAST INIT!");
+
+    const uint8_t expectedWakeup[] = { 0x0E, 0x04, 0x72, 0x7C };
+    if (rxLen >= 4 && memcmp(rxBuffer, expectedWakeup, 4) == 0) {
+      Serial.println("  [✅ COCOK] Respon ECU Wake Up valid: 0E 04 72 7C");
+    } else {
+      Serial.println("  [ℹ️ RESPON DITERIMA] Melanjutkan ke pengiriman Initialise code...");
+    }
+
+    // Jeda antar-frame
+    delay(30);
+
+    // 6. Send Initialise code = 72 05 00 F0 99
+    const uint8_t initCmd[] = { 0x72, 0x05, 0x00, 0xF0, 0x99 };
+    Serial.println("  [Point 6] Kirim Initialise code [72 05 00 F0 99]...");
+    if (!sendFrameWithEchoCheck(initCmd, sizeof(initCmd))) {
+      Serial.println("  [❌ GAGAL] Echo lokal Initialise tidak terdeteksi.");
+      if (attempt < MAX_RETRIES) {
+        Serial.println("  [SOP: Ulangi point 1] Mengulang prosedur inisialisasi...");
+        delay(400);
+        continue;
+      } else {
+        break;
+      }
+    }
+
+    // 7. ECU Response = 02 04 00 FA
+    Serial.println("  [Point 7] Menunggu respon Initialise dari ECU (target: 02 04 00 FA)...");
+    rxLen = readResponse(rxBuffer, sizeof(rxBuffer), KLINE_TIMEOUT_MS);
+
+    if (rxLen <= 0) {
+      Serial.println("  [❌ TIMEOUT] Tidak ada respon dari ECU untuk kode Initialise.");
+      if (attempt < MAX_RETRIES) {
+        Serial.println("  [SOP: Ulangi point 1] Mengulang prosedur inisialisasi...");
+        delay(400);
+        continue;
+      } else {
+        break;
+      }
+    }
+
+    printHex("RX ⬅️", rxBuffer, rxLen);
+
+    const uint8_t expectedInit[] = { 0x02, 0x04, 0x00, 0xFA };
+    if (rxLen >= 4 && memcmp(rxBuffer, expectedInit, 4) == 0) {
+      Serial.println("  [✅ COCOK 100%] Respon Initialise ECU valid: 02 04 00 FA");
+    } else {
+      Serial.println("  [✅ RESPON DITERIMA] Handshake inisialisasi berhasil!");
+    }
+
+    Serial.println("\n🎉 [SUKSES BESAR] INISIALISASI HONDA KEIHIN SELESAI!");
+    Serial.println("   Koneksi ke ECU aktif. Lanjutkan ke STEPS 2 (Menu [5] Request ECM ID / [6] Live Data).");
     ecuConnected = true;
     lastActivityMs = millis();
     digitalWrite(LED_PIN, HIGH);
     return true;
   }
 
-  // Coba variasi paket kedua: FE 04 FF 01 (ISO 14230 Standard Start Session)
-  Serial.println("  [Info] Coba format inisialisasi alternatif [FE 04 FF 01]...");
-  uint8_t initCmd2[] = { 0xFE, 0x04, 0xFF, 0x01 };
-  sendFrameWithEchoCheck(initCmd2, sizeof(initCmd2));
-  rxLen = readResponse(rxBuffer, sizeof(rxBuffer), KLINE_TIMEOUT_MS);
-
-  if (rxLen > 0) {
-    printHex("RX ⬅️", rxBuffer, rxLen);
-    Serial.println("  [✅ SUKSES!] ECU MERESPON ALTERNATIF FAST INIT!");
-    ecuConnected = true;
-    lastActivityMs = millis();
-    digitalWrite(LED_PIN, HIGH);
-    return true;
-  }
-
-  Serial.println("  [❌ GAGAL] Tidak ada respon dari ECU.");
+  Serial.println("\n[❌ INISIALISASI GAGAL] Tidak ada respon dari ECU setelah semua percobaan.");
   Serial.println("  Kemungkinan penyebab:");
-  Serial.println("  - Kunci kontak motor belum di-ON-kan");
-  Serial.println("  - Motor menggunakan protokol 5-Baud Init (coba Menu [2])");
+  Serial.println("  - Kunci kontak motor belum ON");
+  Serial.println("  - Saklar engine cut-off di posisi OFF");
+  Serial.println("  - Motor menggunakan protokol 5-Baud (ISO 9141-2, coba Menu [2])");
   Serial.println("  - Polaritas optocoupler terbalik (coba Menu [9] Toggle Invert)");
-  Serial.println("  - Resistor pull-up 510 ohm belum tersambung ke +12V aki");
+  Serial.println("  - Jalur 12V DLC atau pull-up 510 ohm belum tersambung");
   ecuConnected = false;
   digitalWrite(LED_PIN, LOW);
   return false;
@@ -480,21 +538,21 @@ bool runFiveBaudInit() {
 // =============================================================================
 void runAutoDetect() {
   Serial.println("\n>>> [3] AUTO-DETECT PROTOKOL ECU HONDA <<<");
-  Serial.println("  Mencoba Fast Init (ISO 14230)...");
+  Serial.println("  Mencoba Keihin Init (SOP strategy.md: 70ms/120ms)...");
   if (runFastInit()) {
-    Serial.println("\n  🎯 HASIL AUTO-DETECT: Terkoneksi menggunakan FAST INIT!");
+    Serial.println("\n  🎯 HASIL AUTO-DETECT: Terkoneksi menggunakan HONDA KEIHIN INIT!");
     return;
   }
 
   delay(600);
-  Serial.println("\n  Fast Init gagal, mencoba 5-Baud Init (ISO 9141)...");
+  Serial.println("\n  Keihin Init belum merespon, mencoba 5-Baud Init (ISO 9141-2)...");
   if (runFiveBaudInit()) {
     Serial.println("\n  🎯 HASIL AUTO-DETECT: Terkoneksi menggunakan 5-BAUD INIT!");
     return;
   }
 
   delay(600);
-  Serial.println("\n  Mencoba Fast Init dengan inversi polaritas...");
+  Serial.println("\n  Mencoba Keihin Init dengan inversi polaritas UART...");
   isUartInverted = !isUartInverted;
   Serial.printf("  [Info] Polaritas dibalik ke: %s\n", isUartInverted ? "INVERTED" : "NORMAL");
   if (runFastInit()) {
@@ -634,17 +692,80 @@ void testHardwareLoopback() {
 }
 
 // =============================================================================
-// TEST 5: BACA INFO ECU (PART NUMBER)
+// PARSER SENSOR TABLE (TABLE 11 / TABLE 17)
+// =============================================================================
+void parseSensorTable(const uint8_t* rx, int rxLen, uint8_t tableId) {
+  Serial.printf("\n  📊 HASIL PARSING DATA TABLE 0x%02X (%d BYTE):\n", tableId, rxLen);
+  Serial.println("  ========================================");
+
+  // Format Frame Honda: [02] [Length] [71] [TableId] [Data...] [Checksum]
+  // Data dimulai pada index 4
+  if (rxLen < 6) {
+    Serial.println("  [⚠️] Data frame terlalu pendek.");
+    return;
+  }
+
+  size_t d = 4;
+  int rpm = 0;
+  if (d + 1 < (size_t)rxLen - 1) {
+    rpm = ((int)rx[d] << 8 | rx[d + 1]) / 4;
+    Serial.printf("   RPM Mesin         : %d RPM (Hex: %02X %02X)\n", rpm, rx[d], rx[d + 1]);
+    d += 2;
+  }
+  if (d < (size_t)rxLen - 1) {
+    float tpsVolt = rx[d] * 5.0f / 255.0f;
+    Serial.printf("   TPS (Throttle)    : %.2f Volt (Raw: %02X)\n", tpsVolt, rx[d]);
+    d++;
+  }
+  if (d < (size_t)rxLen - 1) {
+    float ect = (float)rx[d] - 40.0f;
+    Serial.printf("   ECT (Suhu Mesin)  : %.1f °C (Raw: %02X)\n", ect, rx[d]);
+    d++;
+  }
+  if (d < (size_t)rxLen - 1) {
+    float iat = (float)rx[d] - 40.0f;
+    Serial.printf("   IAT (Suhu Udara)  : %.1f °C (Raw: %02X)\n", iat, rx[d]);
+    d++;
+  }
+  if (d < (size_t)rxLen - 1) {
+    float mapVal = (float)rx[d];
+    Serial.printf("   MAP (Tekanan Udara: %.1f kPa (Raw: %02X)\n", mapVal, rx[d]);
+    d++;
+  }
+  if (d < (size_t)rxLen - 1) {
+    float batt = rx[d] * 0.0733f;
+    Serial.printf("   Tegangan Aki      : %.2f Volt (Raw: %02X)\n", batt, rx[d]);
+    d++;
+  }
+
+  Serial.println("  ----------------------------------------");
+  Serial.print("   Semua Data Byte   : ");
+  for (int i = 4; i < rxLen - 1; i++) {
+    Serial.printf("%02X ", rx[i]);
+  }
+  Serial.println();
+  Serial.printf("   Checksum Frame    : 0x%02X\n", rx[rxLen - 1]);
+  Serial.println("  ========================================");
+}
+
+// =============================================================================
+// TEST 5: BACA REQUEST ECM ID (STEPS 2 - strategy.md)
 // =============================================================================
 void readEcuInfo() {
-  Serial.println("\n>>> [5] BACA INFO ECU (PART NUMBER) <<<");
-  // Frame Honda: Table 0x71, Sub 0x01
-  // Header: 72, Length: 05, Table: 71, Sub: 01, Checksum
-  uint8_t req[] = { 0x72, 0x05, 0x71, 0x01, 0x00 };
-  req[4] = calcHondaChecksum(req, 4, true);
+  Serial.println("\n==========================================================");
+  Serial.println(">>> [5] BACA REQUEST ECM ID (SESUAI STRATEGY.MD) <<<");
+  Serial.println("==========================================================");
+  if (!ecuConnected) {
+    Serial.println("  [⚠️ PERINGATAN]: ECU belum diinisialisasi / belum terhubung.");
+    Serial.println("  Disarankan menjalankan Menu [1] (Keihin Init) terlebih dahulu.");
+  }
 
-  if (!sendFrameWithEchoCheck(req, sizeof(req))) {
-    Serial.println("  [❌ GAGAL] Gagal mengirim perintah.");
+  // Sesuai strategy.md: Send Request ECM ID = 72 05 71 00 18
+  const uint8_t reqEcmId[] = { 0x72, 0x05, 0x71, 0x00, 0x18 };
+  Serial.println("  Mengirim Request ECM ID [72 05 71 00 18]...");
+
+  if (!sendFrameWithEchoCheck(reqEcmId, sizeof(reqEcmId))) {
+    Serial.println("  [❌ GAGAL] Gagal mengirim perintah Request ECM ID.");
     return;
   }
 
@@ -653,91 +774,84 @@ void readEcuInfo() {
 
   if (rxLen > 3) {
     printHex("RX ⬅️", rx, rxLen);
+    Serial.println("  ========================================");
+    Serial.printf("  ✅ RESPON ECM ID (%d byte):\n", rxLen);
+    Serial.print("     Hex Data : ");
+    for (int i = 0; i < rxLen; i++) Serial.printf("%02X ", rx[i]);
+    Serial.println();
 
-    // Ekstrak string ASCII part number (biasanya offset ke-3)
-    char partNo[32];
-    size_t pIdx = 0;
-    for (int i = 3; i < rxLen - 1 && pIdx < sizeof(partNo) - 1; i++) {
-      if (rx[i] >= 0x20 && rx[i] <= 0x7E) {
-        partNo[pIdx++] = (char)rx[i];
-      }
+    if (rxLen > 4) {
+      Serial.print("     Payload  : ");
+      for (int i = 4; i < rxLen - 1; i++) Serial.printf("%02X ", rx[i]);
+      Serial.println();
     }
-    partNo[pIdx] = '\0';
-
-    Serial.println("  =====================================");
-    Serial.printf("  ✅ PART NUMBER ECU : %s\n", strlen(partNo) > 0 ? partNo : "Format Non-ASCII / Unknown");
-    Serial.println("  =====================================");
+    Serial.println("  ========================================");
   } else {
-    Serial.println("  [❌ TIMEOUT] ECU tidak membalas permintaan Info ECU.");
-    Serial.println("  Lakukan Test [1] Fast Init terlebih dahulu.");
+    Serial.println("  [❌ TIMEOUT] ECU tidak membalas permintaan ECM ID.");
+    Serial.println("  Lakukan Test [1] Init Honda Keihin terlebih dahulu.");
   }
 }
 
 // =============================================================================
-// TEST 6: BACA LIVE DATA SENSOR
+// TEST 6: BACA LIVE DATA SENSOR (TABLE 11 / TABLE 17 - strategy.md)
 // =============================================================================
 void readLiveData() {
-  Serial.println("\n>>> [6] BACA LIVE DATA SENSOR (TABLE 0x71 SUB 0x00) <<<");
+  Serial.println("\n==========================================================");
+  Serial.println(">>> [6] BACA DATA SENSOR (TABLE 11 / 17 SESUAI STRATEGY.MD) <<<");
+  Serial.println("==========================================================");
   if (!ecuConnected) {
-    Serial.println("  [⚠️ PERINGATAN]: ECU belum terhubung / belum di-Wakeup.");
+    Serial.println("  [⚠️ PERINGATAN]: ECU belum terhubung / belum di-Init.");
     Serial.println("  ECU motor tidak akan merespon jika belum diinisialisasi.");
-    Serial.println("  Saran: Pastikan kontak ON dan jalankan Menu [1] (Fast Init) dulu!");
+    Serial.println("  Saran: Pastikan kontak ON dan jalankan Menu [1] (Keihin Init) dulu!");
   }
-  uint8_t req[] = { 0x72, 0x05, 0x71, 0x00, 0x00 };
-  req[4] = calcHondaChecksum(req, 4, true);
 
-  if (!sendFrameWithEchoCheck(req, sizeof(req))) {
-    Serial.println("  [❌ GAGAL] Gagal mengirim perintah.");
+  // 1. Send Request data table 11 = 72 05 71 11 07
+  const uint8_t reqTable11[] = { 0x72, 0x05, 0x71, 0x11, 0x07 };
+  Serial.println("  [Step 1] Mengirim Request Data Table 11 [72 05 71 11 07]...");
+
+  if (!sendFrameWithEchoCheck(reqTable11, sizeof(reqTable11))) {
+    Serial.println("  [❌ GAGAL] Gagal mengirim perintah Table 11.");
     return;
   }
 
   uint8_t rx[64];
   int rxLen = readResponse(rx, sizeof(rx), KLINE_TIMEOUT_MS);
 
-  if (rxLen > 5) {
+  if (rxLen <= 0) {
+    Serial.println("  [❌ TIMEOUT] ECU tidak merespon permintaan Table 11.");
+    Serial.println("  Lakukan Test [1] Init Honda Keihin terlebih dahulu.");
+    return;
+  }
+
+  printHex("RX ⬅️", rx, rxLen);
+
+  // 2. Cek apakah ECU menolak Table 11:
+  // Sesuai strategy.md: If the ecu response data in table 11 is = 02 05 71 11 77
+  // then continue to request data table 17. Send to ECU = 72 05 71 17 01
+  const uint8_t table11Reject[] = { 0x02, 0x05, 0x71, 0x11, 0x77 };
+  if (rxLen == 5 && memcmp(rx, table11Reject, 5) == 0) {
+    Serial.println("  [ℹ️ RESPON] ECU mengembalikan 02 05 71 11 77 (Table 11 ditolak / tidak didukung).");
+    Serial.println("  [Step 2] Beralih meminta Data Table 17 sesuai strategy.md...");
+    delay(35);
+
+    const uint8_t reqTable17[] = { 0x72, 0x05, 0x71, 0x17, 0x01 };
+    Serial.println("  Mengirim Request Data Table 17 [72 05 71 17 01]...");
+
+    if (!sendFrameWithEchoCheck(reqTable17, sizeof(reqTable17))) {
+      Serial.println("  [❌ GAGAL] Gagal mengirim perintah Table 17.");
+      return;
+    }
+
+    rxLen = readResponse(rx, sizeof(rx), KLINE_TIMEOUT_MS);
+    if (rxLen <= 0) {
+      Serial.println("  [❌ TIMEOUT] ECU tidak merespon permintaan Table 17.");
+      return;
+    }
+
     printHex("RX ⬅️", rx, rxLen);
-
-    // Parsing sederhana parameter umum Honda
-    size_t d = 3;
-    int rpm = 0;
-    float tpsVolt = 0.0, ect = 0.0, iat = 0.0, mapVal = 0.0, batt = 0.0;
-
-    if (d + 1 < (size_t)rxLen) {
-      rpm = ((int)rx[d] << 8 | rx[d + 1]) / 4;
-      d += 2;
-    }
-    if (d < (size_t)rxLen) {
-      tpsVolt = rx[d] * 5.0f / 255.0f;
-      d++;
-    }
-    if (d < (size_t)rxLen) {
-      ect = (float)rx[d] - 40.0f;
-      d++;
-    }
-    if (d < (size_t)rxLen) {
-      iat = (float)rx[d] - 40.0f;
-      d++;
-    }
-    if (d < (size_t)rxLen) {
-      mapVal = (float)rx[d];
-      d++;
-    }
-    if (d < (size_t)rxLen) {
-      batt = rx[d] * 0.0733f;
-      d++;
-    }
-
-    Serial.println("  ========================================");
-    Serial.printf("   RPM Mesin         : %d RPM\n", rpm);
-    Serial.printf("   TPS (Throttle)    : %.2f Volt\n", tpsVolt);
-    Serial.printf("   ECT (Suhu Mesin)  : %.1f °C\n", ect);
-    Serial.printf("   IAT (Suhu Udara)  : %.1f °C\n", iat);
-    Serial.printf("   MAP (Tekanan Udara: %.1f kPa\n", mapVal);
-    Serial.printf("   Tegangan Aki      : %.2f Volt\n", batt);
-    Serial.println("  ========================================");
+    parseSensorTable(rx, rxLen, 0x17);
   } else {
-    Serial.println("  [❌ TIMEOUT] ECU tidak merespon live data.");
-    Serial.println("  Lakukan Test [1] Fast Init terlebih dahulu.");
+    parseSensorTable(rx, rxLen, 0x11);
   }
 }
 

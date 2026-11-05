@@ -17,55 +17,117 @@ void KLineDriver::begin() {
 }
 
 // ============================================
-// FAST INIT (ISO 14230-2)
-// Used by most Honda PGM-FI ECUs (2012+)
+// FAST INIT (HONDA PGM-FI WAKEUP: 70ms LOW / 120ms HIGH)
+// Protocol: Honda Keihin K-Line (strategy.md / ISO 14230)
 // ============================================
 bool KLineDriver::fastInit() {
-  Serial.println("[KLine] Starting Fast Init...");
+  Serial.printf("[KLine] Starting Fast Init (Wakeup %dms LOW / %dms HIGH)...\n",
+                KLINE_FAST_INIT_LOW_MS, KLINE_FAST_INIT_HIGH_MS);
 
-  // End any existing UART session
-  Serial2.end();
-  delay(50);
+  const int MAX_RETRIES = 3;
 
-  // Step 1: Send 25ms LOW + 25ms HIGH wake-up pattern
-  pinMode(KLINE_TX_PIN, OUTPUT);
-  setKLineLow();
-  delay(KLINE_FAST_INIT_LOW_MS);
-  setKLineHigh();
-  delay(KLINE_FAST_INIT_HIGH_MS);
+  for (int attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+    if (attempt > 1) {
+      Serial.printf("[KLine] Retrying Fast Init (Attempt %d of %d)...\n", attempt, MAX_RETRIES);
+      delay(400);
+    }
 
-  // Step 2: Start UART at 10400 bps
-  Serial2.begin(KLINE_BAUDRATE, SERIAL_8N1, KLINE_RX_PIN, KLINE_TX_PIN);
-  delay(20);
+    // End any existing UART session
+    Serial2.end();
+    delay(50);
 
-  // Step 3: Send Honda init bytes
-  // Honda Fast Init: [FE 04 FF FF]
-  // FE = format byte (functional addressing, 4 data bytes)
-  // 04 = target (ECU broadcast)
-  // FF = start diagnostic session
-  uint8_t initCmd[] = { 0xFE, 0x04, 0xFF, 0xFF };
-  initCmd[3] = calcChecksum(initCmd, 3); // Recalculate checksum
+    // Step 1: Pin TX = LOW (70 ms)
+    pinMode(KLINE_TX_PIN, OUTPUT);
+    setKLineLow();
+    delay(KLINE_FAST_INIT_LOW_MS);
 
-  flushRx();
-  sendBytes(initCmd, sizeof(initCmd));
+    // Step 2: Pin TX = HIGH (120 ms)
+    setKLineHigh();
+    delay(KLINE_FAST_INIT_HIGH_MS);
 
-  // Step 4: Wait for ECU response
-  uint8_t response[16];
-  int rxLen = readBytes(response, sizeof(response), KLINE_TIMEOUT_MS);
+    // Step 3: Set Baudrate = 10400 bps (Standard Honda PGM-FI)
+    Serial2.begin(KLINE_BAUDRATE, SERIAL_8N1, KLINE_RX_PIN, KLINE_TX_PIN);
+    delay(20); // Stabilization delay for UART transceiver
 
-  if (rxLen > 0) {
-    Serial.printf("[KLine] Fast Init response: %d bytes => ", rxLen);
-    for (int i = 0; i < rxLen; i++) Serial.printf("%02X ", response[i]);
-    Serial.println();
+    // Step 4: Wake Up Handshake — Kirim kode [FE 04 72 8C] ke ECU
+    const uint8_t wakeupCmd[] = { 0xFE, 0x04, 0x72, 0x8C };
+    Serial.println("[KLine] Step 4: Sending Wake Up Handshake [FE 04 72 8C]...");
+    flushRx();
+    sendBytes(wakeupCmd, sizeof(wakeupCmd));
 
-    _connected = true;
-    _initMode = INIT_FAST;
-    _lastActivity = millis();
-    Serial.println("[KLine] ✅ Fast Init SUCCESS");
-    return true;
+    uint8_t response[64];
+    int rxLen = readBytes(response, sizeof(response), KLINE_TIMEOUT_MS);
+
+    bool wakeupAck = false;
+    if (rxLen > 0) {
+      Serial.printf("[KLine] ECU Wake Up response: %d bytes => ", rxLen);
+      for (int i = 0; i < rxLen; i++) Serial.printf("%02X ", response[i]);
+      Serial.println();
+      wakeupAck = true;
+    }
+
+    // Step 5: Send Initialise code = 72 05 00 F0 99
+    delay(30);
+    const uint8_t initCmd[] = { 0x72, 0x05, 0x00, 0xF0, 0x99 };
+    Serial.println("[KLine] Step 5: Sending Initialise code [72 05 00 F0 99]...");
+    flushRx();
+    sendBytes(initCmd, sizeof(initCmd));
+
+    rxLen = readBytes(response, sizeof(response), KLINE_TIMEOUT_MS);
+    if (rxLen > 0) {
+      Serial.printf("[KLine] ECU Initialise response: %d bytes => ", rxLen);
+      for (int i = 0; i < rxLen; i++) Serial.printf("%02X ", response[i]);
+      Serial.println();
+
+      _connected = true;
+      _initMode = INIT_FAST;
+      _lastActivity = millis();
+      Serial.println("[KLine] ✅ Honda Keihin Fast Init SUCCESS (Full Handshake)");
+      return true;
+    }
+
+    if (wakeupAck) {
+      // ECU merespon kode Wake Up, sesi aktif
+      _connected = true;
+      _initMode = INIT_FAST;
+      _lastActivity = millis();
+      Serial.println("[KLine] ✅ Fast Init SUCCESS (Wake Up ACK)");
+      return true;
+    }
+
+    // Fallback: Format Alternatif Honda HDS Wakeup [72 05 00 00 89]
+    Serial.println("[KLine] Fallback: Trying Honda HDS Handshake [72 05 00 00 89]...");
+    uint8_t hdsWakeup[] = { 0x72, 0x05, 0x00, 0x00, 0x89 };
+    flushRx();
+    sendBytes(hdsWakeup, sizeof(hdsWakeup));
+    rxLen = readBytes(response, sizeof(response), 800);
+    if (rxLen > 0) {
+      Serial.printf("[KLine] HDS Wakeup response: %d bytes => ", rxLen);
+      for (int i = 0; i < rxLen; i++) Serial.printf("%02X ", response[i]);
+      Serial.println();
+
+      _connected = true;
+      _initMode = INIT_FAST;
+      _lastActivity = millis();
+      Serial.println("[KLine] ✅ Fast Init SUCCESS (HDS Handshake)");
+      return true;
+    }
+
+    // Fallback: Langsung minta data awal (Table 0x71 Sub 0x00)
+    Serial.println("[KLine] Fallback: Trying Direct Data Request (Table 0x71 Sub 0x00)...");
+    flushRx();
+    sendHondaRequest(HONDA_TABLE_LIVE, 0x00);
+    rxLen = readBytes(response, sizeof(response), KLINE_TIMEOUT_MS);
+    if (rxLen > 5) {
+      _connected = true;
+      _initMode = INIT_FAST;
+      _lastActivity = millis();
+      Serial.println("[KLine] ✅ Fast Init SUCCESS (Direct Data Request Handshake)");
+      return true;
+    }
   }
 
-  Serial.println("[KLine] ❌ Fast Init FAILED (no response)");
+  Serial.println("[KLine] ❌ Fast Init FAILED (no response from ECU)");
   _connected = false;
   return false;
 }
@@ -213,7 +275,7 @@ bool KLineDriver::sendHondaRequest(uint8_t tableId, uint8_t subId,
     idx += extraLen;
   }
 
-  frame[idx] = calcChecksum(frame, idx);
+  frame[idx] = calcChecksum(frame, idx, true);
   idx++;
 
   return sendBytes(frame, idx);
@@ -224,11 +286,13 @@ int KLineDriver::readHondaResponse(uint8_t* buffer, size_t maxLen, uint32_t time
 
   if (len < 3) return -1; // Too short
 
-  // Verify checksum
-  uint8_t expected = calcChecksum(buffer, len - 1);
-  if (buffer[len - 1] != expected) {
+  // Verify checksum: Honda PGM-FI two's complement or simple sum fallback
+  uint8_t expected2Comp = calcChecksum(buffer, len - 1, true);
+  uint8_t expectedSimple = calcChecksum(buffer, len - 1, false);
+
+  if (buffer[len - 1] != expected2Comp && buffer[len - 1] != expectedSimple) {
     Serial.printf("[KLine] Checksum error: got 0x%02X, expected 0x%02X\n",
-                  buffer[len - 1], expected);
+                  buffer[len - 1], expected2Comp);
     return -2; // Checksum error
   }
 
@@ -238,12 +302,15 @@ int KLineDriver::readHondaResponse(uint8_t* buffer, size_t maxLen, uint32_t time
 // ============================================
 // UTILITIES
 // ============================================
-uint8_t KLineDriver::calcChecksum(const uint8_t* data, size_t len) {
+uint8_t KLineDriver::calcChecksum(const uint8_t* data, size_t len, bool twoComplement) {
   uint16_t sum = 0;
   for (size_t i = 0; i < len; i++) {
     sum += data[i];
   }
-  return (uint8_t)(sum & 0xFF); // Honda uses simple sum mod 256
+  if (twoComplement) {
+    return (uint8_t)((0x100 - (sum & 0xFF)) & 0xFF);
+  }
+  return (uint8_t)(sum & 0xFF);
 }
 
 void KLineDriver::disconnect() {

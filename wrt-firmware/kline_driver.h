@@ -30,7 +30,7 @@ public:
   int  readHondaResponse(uint8_t* buffer, size_t maxLen, uint32_t timeoutMs = KLINE_TIMEOUT_MS);
 
   // Utilities
-  uint8_t calcChecksum(const uint8_t* data, size_t len);
+  uint8_t calcChecksum(const uint8_t* data, size_t len, bool twoComplement = true);
   bool    isConnected() { return _connected; }
   void    disconnect();
   void    flushRx();

@@ -25,8 +25,8 @@
 #define BT_SPP_UUID     "00001101-0000-1000-8000-00805F9B34FB"
 
 // ---- K-Line Protocol ----
-#define KLINE_FAST_INIT_LOW_MS    25    // Fast init: LOW duration
-#define KLINE_FAST_INIT_HIGH_MS   25    // Fast init: HIGH duration
+#define KLINE_FAST_INIT_LOW_MS    70    // Fast init: LOW duration
+#define KLINE_FAST_INIT_HIGH_MS   120    // Fast init: HIGH duration
 #define KLINE_5BAUD_BIT_MS        200   // 5-baud init: bit duration (5bps = 200ms/bit)
 #define KLINE_TIMEOUT_MS          2000  // Response timeout
 #define KLINE_RETRY_COUNT         3     // Max retries before fail

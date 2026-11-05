@@ -20,7 +20,7 @@ const state = {
     modelCode: 'K1Z',
     partNumber: '30400-K1Z-N01',
     manufacturer: 'Shindengen',
-    protocol: 'Honda K-Line (ISO 14230 Fast Init)',
+    protocol: 'Honda K-Line (Wakeup 70ms LOW / 120ms HIGH)',
     plate: 'B 4521 WRT',
     mileage: 14250,
   },

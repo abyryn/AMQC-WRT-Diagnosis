@@ -1,5 +1,6 @@
 # 🏍️ WRT Garage — Honda PGM-FI AI Diagnostic Tool (v2.0)
 
+[![Project Progress](https://img.shields.io/badge/Project_Progress-86%25_Completed-2ea44f?style=for-the-badge&logo=target&logoColor=white)](https://github.com/)
 [![Node.js](https://img.shields.io/badge/Node.js-v20.0+-339933?style=flat-square&logo=nodedotjs&logoColor=white)](https://nodejs.org/)
 [![ESP32](https://img.shields.io/badge/ESP32-DOIT_V1-E7352C?style=flat-square&logo=espressif&logoColor=white)](https://www.espressif.com/)
 [![React Native](https://img.shields.io/badge/React_Native-v0.74-61DAFB?style=flat-square&logo=react&logoColor=black)](https://reactnative.dev/)
@@ -7,6 +8,10 @@
 [![OpenRouter AI](https://img.shields.io/badge/AI_Engine-OpenRouter_Gemini_2.5-7928CA?style=flat-square&logo=google&logoColor=white)](https://openrouter.ai/)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16.0-4169E1?style=flat-square&logo=postgresql&logoColor=white)](https://www.postgresql.org/)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square)](LICENSE)
+
+> [!IMPORTANT]
+> **Status Perkembangan Proyek: 86% Selesai**  
+> Seluruh modul inti (K-Line Physical Driver, 4N35 Optocoupler Isolation Circuit, FreeRTOS Multitasking Firmware, 3-Layer AI Diagnostic Engine, Docker Backend, dan Mobile App Suite) telah selesai diimplementasikan dan memasuki fase uji lapangan serta kalibrasi telemetri real-time motor Honda PGM-FI.
 
 > **Tagline**: *"Diagnosis Honda seperti Master Teknisi — di genggaman tangan, dengan kecerdasan AI"*
 

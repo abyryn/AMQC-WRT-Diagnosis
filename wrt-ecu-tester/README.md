@@ -46,12 +46,12 @@ Setelah serial monitor terbuka, Anda akan disambut menu interaktif. Cukup ketik 
 
 ```text
 --- PILIH MENU TEST DIAGNOSTIK ---
- [1] Test Fast Init (ISO 14230-2) — Untuk BeAT, Vario, PCX, CB150R
+ [1] Test Init Honda Keihin (Sesuai strategy.md: 70ms/120ms, FE 04 72 8C)
  [2] Test 5-Baud Init (ISO 9141-2) — Untuk Supra X 125 FI KPH lama
- [3] Auto-Detect Connection — Coba Fast Init lalu 5-Baud
- [4] Self-Test Rangkaian Optocoupler (Hardware Loopback Test)
- [5] Baca Info ECU (Part Number & Manufacturer)
- [6] Baca Live Data Sensor (RPM, TPS, ECT, IAT, Battery)
+ [3] Auto-Detect Connection — Coba Keihin Init lalu 5-Baud
+ [4] Self-Test Rangkaian Optocoupler (Diagnostik DC & Loopback)
+ [5] Baca Request ECM ID (Table 71 Sub 00 — Sesuai strategy.md)
+ [6] Baca Live Data Sensor (Table 11 / Table 17 — Sesuai strategy.md)
  [7] Baca Diagnostic Trouble Code (DTC Fault Codes)
  [8] K-Line Bus Sniffer (Monitor lalu lintas data mentah)
  [9] Toggle UART Polarity Invert (Normal / Inverted)
@@ -64,9 +64,10 @@ Setelah serial monitor terbuka, Anda akan disambut menu interaktif. Cukup ketik 
    - Menguji apakah pin TX dan RX terhubung dengan benar dan optocoupler bekerja.
    - Jika polaritas terbalik, sistem akan memberi tahu untuk mengaktifkan menu **`[9]`**.
 2. **Langkah 2**: Colokkan kabel ke DLC motor, putar kunci kontak ke posisi **ON**.
-3. **Langkah 3**: Tekan **`[1]` (Test Fast Init)** atau **`[3]` (Auto-Detect)**.
-   - Jika berhasil, LED biru ESP32 akan berkedip dan muncul pesan `[✅ SUKSES!] ECU MERESPON WAKEUP FAST INIT!`.
-4. **Langkah 4**: Tekan **`[5]`** untuk membaca nomor part ECU motor Anda (misal `30400-K1Z-N01`), lalu **`[6]`** untuk membaca RPM, sensor suhu, dan tegangan aki secara nyata.
+3. **Langkah 3**: Tekan **`[1]` (Test Init Honda Keihin)** atau **`[3]` (Auto-Detect)**.
+   - Sistem akan mengeksekusi pulsa 70ms LOW + 120ms HIGH, mengirim kode Wake Up `FE 04 72 8C`, dan Initialise `72 05 00 F0 99` dengan retry loop otomatis.
+   - Jika berhasil, LED biru ESP32 akan berkedip dan status ECU tersambung.
+4. **Langkah 4**: Tekan **`[5]`** untuk membaca Request ECM ID (`72 05 71 00 18`), lalu **`[6]`** untuk membaca Live Data Table 11 (`72 05 71 11 07`) atau fallback Table 17 (`72 05 71 17 01`).
 
 ---
 
