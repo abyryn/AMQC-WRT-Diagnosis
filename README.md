@@ -1,4 +1,4 @@
-# 🏍️ WRT Garage — Honda PGM-FI AI Diagnostic Tool (v2.0)
+# 🏍️ WRT Diagnosis — Honda PGM-FI AI Diagnostic Tool (v2.0)
 
 [![Project Progress](https://img.shields.io/badge/Project_Progress-86%25_Completed-2ea44f?style=for-the-badge&logo=target&logoColor=white)](https://github.com/)
 [![Node.js](https://img.shields.io/badge/Node.js-v20.0+-339933?style=flat-square&logo=nodedotjs&logoColor=white)](https://nodejs.org/)
@@ -16,12 +16,12 @@
 > **Tagline**: *"Diagnosis Honda seperti Master Teknisi — di genggaman tangan, dengan kecerdasan AI"*
 
 <p align="center">
-  <img src="docs/images/feature_dashboard.jpg" alt="WRT Garage Diagnostic Suite Dashboard" width="100%" />
+  <img src="docs/images/feature_dashboard.jpg" alt="WRT Diagnosis Diagnostic Suite Dashboard" width="100%" />
   <br>
-  <em>Antarmuka Terpadu WRT Garage — Monitoring Telemetri Real-Time, Analisis AI 3-Layer, dan Status ECU Honda PGM-FI</em>
+  <em>Antarmuka Terpadu WRT Diagnosis — Monitoring Telemetri Real-Time, Analisis AI 3-Layer, dan Status ECU Honda PGM-FI</em>
 </p>
 
-**WRT Garage** adalah ekosistem alat diagnostik pintar generasi baru berbasis **AI 3-Layer Engine** dan sirkuit proteksi isolasi optocoupler **4N35 K-Line** untuk seluruh lini sepeda motor Honda PGM-FI (Programmed Fuel Injection). Sistem ini mengintegrasikan mikrokontroler ESP32, aplikasi mobile smartphone (Android/iOS), backend cloud berbasis Docker di VPS, printer struk thermal Bluetooth, serta model penalaran Large Language Model (LLM) mutakhir (Google Gemini 2.5 Flash / Claude 3.5 Sonnet melalui OpenRouter).
+**WRT Diagnosis** adalah ekosistem alat diagnostik pintar generasi baru berbasis **AI 3-Layer Engine** dan sirkuit proteksi isolasi optocoupler **4N35 K-Line** untuk seluruh lini sepeda motor Honda PGM-FI (Programmed Fuel Injection). Sistem ini mengintegrasikan mikrokontroler ESP32, aplikasi mobile smartphone (Android/iOS), backend cloud berbasis Docker di VPS, printer struk thermal Bluetooth, serta model penalaran Large Language Model (LLM) mutakhir (Google Gemini 2.5 Flash / Claude 3.5 Sonnet melalui OpenRouter).
 
 ---
 
@@ -50,9 +50,9 @@ Kondisi tersebut melahirkan **kesenjangan teknologi yang teramat lebar** antara 
 
 ---
 
-### 2. Solusi Komprehensif dari WRT Garage
+### 2. Solusi Komprehensif dari WRT Diagnosis
 
-Untuk mengatasi permasalahan di atas, **WRT Garage** menghadirkan solusi teknologi terpadu yang memadukan keandalan perangkat keras nirkabel dengan kedalaman analisis *Artificial Intelligence*:
+Untuk mengatasi permasalahan di atas, **WRT Diagnosis** menghadirkan solusi teknologi terpadu yang memadukan keandalan perangkat keras nirkabel dengan kedalaman analisis *Artificial Intelligence*:
 
 1. **Hardware Diagnostik Mandiri Ultra-Terjangkau**: Menggunakan mikrokontroler ESP32 dual-core yang dipadukan dengan sirkuit isolasi optocoupler 4N35 untuk bus K-Line 12V. Biaya pembuatan perangkat hanya berkisar **Rp 150.000 – Rp 300.000**, memberikan kemampuan pembacaan ECU setara scanner resmi bernilai puluhan juta rupiah.
 2. **AI Diagnosis Engine 3-Layer**: Menggabungkan *Layer 1 (Rule Engine Honda DTC)*, *Layer 2 (Knowledge Base Sensor & Threshold Honda)*, dan *Layer 3 (AI Reasoning LLM OpenRouter/Gemini 2.5 Flash)*. AI bertindak layaknya seorang *Master Technician* Honda berpengalaman 20 tahun yang menganalisis korelasi data secara holistik.
@@ -94,7 +94,7 @@ Untuk mengatasi permasalahan di atas, **WRT Garage** menghadirkan solusi teknolo
 
 ## 📸 Galeri Fitur & Antarmuka Sistem
 
-Berikut ringkasan visual antarmuka aplikasi mobile dan perangkat keras **WRT Garage v2.0**:
+Berikut ringkasan visual antarmuka aplikasi mobile dan perangkat keras **WRT Diagnosis v2.0**:
 
 | 📊 Live Telemetri Sensor Real-Time | 🔍 DTC Scanner & Freeze Frame |
 |:---:|:---:|
@@ -115,11 +115,11 @@ Berikut ringkasan visual antarmuka aplikasi mobile dan perangkat keras **WRT Gar
 
 ## 🚀 Katalog Lengkap Fitur & Cara Kerja
 
-Berikut adalah rincian fungsionalitas dan mekanisme operasional dari setiap fitur yang ada di ekosistem **WRT Garage**:
+Berikut adalah rincian fungsionalitas dan mekanisme operasional dari setiap fitur yang ada di ekosistem **WRT Diagnosis**:
 
 ```
 ┌────────────────────────────────────────────────────────────────────────────┐
-│                       FITUR LENGKAP WRT GARAGE v2.0                        │
+│                       FITUR LENGKAP WRT Diagnosis v2.0                        │
 ├────────────────────────────────┬───────────────────────────────────────────┤
 │ 1. Pembacaan DTC & Status MIL  │ 8. Cetak Struk Thermal (ESC/POS & ZPL)    │
 │ 2. Clear / Reset DTC           │ 9. Manual K-Line HEX Terminal             │
@@ -337,7 +337,7 @@ Berikut adalah rincian fungsionalitas dan mekanisme operasional dari setiap fitu
 <p align="center">
   <img src="docs/images/feature_hardware_adapter.jpg" alt="ESP32 Diagnostic Hardware Adapter" width="85%" />
   <br>
-  <em>Modul Adapter Hardware WRT Garage — Dilengkapi Isolasi Optocoupler 4N35, Status Indikator LED, dan Konektor DLC Honda 4-Pin Merah</em>
+  <em>Modul Adapter Hardware WRT Diagnosis — Dilengkapi Isolasi Optocoupler 4N35, Status Indikator LED, dan Konektor DLC Honda 4-Pin Merah</em>
 </p>
 
 ---
@@ -428,7 +428,7 @@ ESP32 GPIO16 (RX)     ESP32 GPIO17 (TX)
 ```
 
 <p align="center">
-  <img src="docs/images/feature_hardware_adapter.jpg" alt="Implementasi Fisik Modul Hardware WRT Garage" width="85%" />
+  <img src="docs/images/feature_hardware_adapter.jpg" alt="Implementasi Fisik Modul Hardware WRT Diagnosis" width="85%" />
   <br>
   <em>Implementasi Fisik Modul ESP32 & Sirkuit Optocoupler 4N35 dengan Kabel DLC Honda PGM-FI</em>
 </p>
@@ -437,7 +437,7 @@ ESP32 GPIO16 (RX)     ESP32 GPIO17 (TX)
 
 ## 🏍️ Database ECU Honda Terverifikasi
 
-Sistem WRT Garage telah diuji dan diverifikasi kompatibilitasnya pada berbagai lini ECU pabrikan Keihin dan Shindengen:
+Sistem WRT Diagnosis telah diuji dan diverifikasi kompatibilitasnya pada berbagai lini ECU pabrikan Keihin dan Shindengen:
 
 | Model Motor | Kode Model | Tahun | ECU Part Number | Produsen ECU | Protokol & Inisialisasi |
 |---|:---:|:---:|:---:|:---:|:---:|
@@ -531,5 +531,5 @@ npx react-native run-android
 
 ## 📜 Lisensi & Hak Cipta
 
-Proyek ini dikembangkan oleh **WRT Garage Team** © 2026.  
+Proyek ini dikembangkan oleh **WRT Diagnosis Team** © 2026.  
 Didistribusikan di bawah lisensi resmi [MIT License](LICENSE).
