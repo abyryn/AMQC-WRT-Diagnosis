@@ -5,12 +5,22 @@
 const dtcDatabase = require('../data/dtc_database.json');
 const sensorKnowledge = require('../data/sensor_knowledge.json');
 const geminiService = require('./gemini.service');
+const openrouterService = require('./openrouter.service');
 const db = require('../database/db');
+
+function getAiProvider() {
+  const provider = (process.env.AI_PROVIDER || 'gemini').toLowerCase();
+  if (provider === 'openrouter') {
+    return openrouterService;
+  }
+  return geminiService;
+}
 
 // ============================================
 // LAYER 1: Rule Engine — DTC Lookup
 // ============================================
 function lookupDTC(codes) {
+  const tStart = performance.now();
   const results = [];
   for (const code of codes) {
     const dtcInfo = dtcDatabase.dtc_database[code];
@@ -28,6 +38,10 @@ function lookupDTC(codes) {
       });
     }
   }
+  const tDuration = performance.now() - tStart;
+  const foundCount = results.filter((d) => d.found).length;
+  const unknownCount = results.length - foundCount;
+  console.log(`[3-Layer:Layer-1] 🔍 lookupDTC() diproses dalam ${tDuration.toFixed(2)}ms (Total: ${codes.length} kode, Ditemukan: ${foundCount}, Tidak Dikenal: ${unknownCount})`);
   return results;
 }
 
@@ -35,6 +49,7 @@ function lookupDTC(codes) {
 // LAYER 2: Knowledge Base — Sensor Validation
 // ============================================
 function validateSensors(liveData) {
+  const tStart = performance.now();
   const anomalies = [];
   const sensorMap = {
     rpm: 'RPM',
@@ -48,9 +63,11 @@ function validateSensors(liveData) {
     fuel_trim_pct: 'FUEL_TRIM',
   };
 
+  let evaluatedCount = 0;
   for (const [dataKey, sensorKey] of Object.entries(sensorMap)) {
-    const value = liveData[dataKey];
+    const value = liveData ? liveData[dataKey] : undefined;
     if (value === undefined || value === null) continue;
+    evaluatedCount++;
 
     const spec = sensorKnowledge.sensors[sensorKey];
     if (!spec) continue;
@@ -85,6 +102,8 @@ function validateSensors(liveData) {
     }
   }
 
+  const tDuration = performance.now() - tStart;
+  console.log(`[3-Layer:Layer-2] 📊 validateSensors() diproses dalam ${tDuration.toFixed(2)}ms (Dievaluasi: ${evaluatedCount} sensor, Anomali: ${anomalies.length})`);
   return anomalies;
 }
 
@@ -98,28 +117,55 @@ function validateSensors(liveData) {
  * @returns {Object} Full diagnosis result with all layers
  */
 async function runDiagnosis(payload) {
-  const startTime = Date.now();
+  const startTotal = performance.now();
+  const motorName = payload.motor?.model || payload.motor?.name || payload.motor || 'Honda PGM-FI';
+
+  console.log('\n============================================================');
+  console.log(`[3-Layer AI Studio] 🚀 Memulai 3-Layer AI Diagnosis: ${motorName}`);
+  console.log(`[3-Layer AI Studio] ⏰ Waktu Mulai: ${new Date().toLocaleTimeString('id-ID')}`);
+  console.log('============================================================');
 
   // --- Layer 1: DTC Lookup ---
+  const t1Start = performance.now();
   const allDTCCodes = [
     ...(payload.dtc?.active || []),
     ...(payload.dtc?.pending || []),
   ];
   const dtcResults = lookupDTC(allDTCCodes);
+  const t1Duration = performance.now() - t1Start;
 
   // --- Layer 2: Sensor Validation ---
+  const t2Start = performance.now();
   const sensorAnomalies = payload.live_data
     ? validateSensors(payload.live_data)
     : [];
+  const t2Duration = performance.now() - t2Start;
 
   // Build enriched context for AI
+  const tCtxStart = performance.now();
   const enrichedContext = buildEnrichedContext(dtcResults, sensorAnomalies, payload);
+  const tCtxDuration = performance.now() - tCtxStart;
 
-  // --- Layer 3: AI Reasoning via Google Gemini ---
-  const aiResult = await geminiService.diagnose(payload, enrichedContext);
+  // --- Layer 3: AI Reasoning via Configured Provider (Gemini / OpenRouter) ---
+  const activeProviderName = (process.env.AI_PROVIDER || 'gemini').toLowerCase();
+  console.log(`[3-Layer:Layer-3] 🤖 Mengirim context ke AI Provider: ${activeProviderName.toUpperCase()}`);
+  const t3Start = performance.now();
+  const aiProvider = getAiProvider();
+  const aiResult = await aiProvider.diagnose(payload, enrichedContext);
+  const t3Duration = performance.now() - t3Start;
+  console.log(`[3-Layer:Layer-3] ✅ AI Reasoning selesai dalam ${t3Duration.toFixed(2)}ms (Model: ${aiResult.metadata?.model_used || 'Local Engine'})`);
 
   // Compose final result
-  const totalLatency = Date.now() - startTime;
+  const totalDuration = performance.now() - startTotal;
+
+  console.log('------------------------------------------------------------');
+  console.log('[3-Layer AI Studio] ⏱️ Rekap Waktu Pemrosesan Setiap Fungsi:');
+  console.log(`  1. Layer 1 (DTC Rule Engine)   : ${t1Duration.toFixed(2)} ms`);
+  console.log(`  2. Layer 2 (Sensor Validation) : ${t2Duration.toFixed(2)} ms`);
+  console.log(`  3. Enriched Context Builder    : ${tCtxDuration.toFixed(2)} ms`);
+  console.log(`  4. Layer 3 (AI Model Inference): ${t3Duration.toFixed(2)} ms`);
+  console.log(`  >> TOTAL WAKTU PROSES SISTEM   : ${totalDuration.toFixed(2)} ms`);
+  console.log('============================================================\n');
 
   return {
     success: aiResult.success,
@@ -138,10 +184,17 @@ async function runDiagnosis(payload) {
         : { error: aiResult.error },
     },
     metadata: {
-      total_latency_ms: totalLatency,
+      total_latency_ms: Math.round(totalDuration),
       ai_model: aiResult.metadata.model_used,
       ai_tokens: aiResult.metadata.tokens_used,
-      ai_latency_ms: aiResult.metadata.latency_ms,
+      ai_latency_ms: Math.round(t3Duration),
+      timings: {
+        layer1_dtc_ms: Number(t1Duration.toFixed(2)),
+        layer2_sensors_ms: Number(t2Duration.toFixed(2)),
+        context_build_ms: Number(tCtxDuration.toFixed(2)),
+        layer3_ai_ms: Number(t3Duration.toFixed(2)),
+        total_ms: Number(totalDuration.toFixed(2)),
+      },
       timestamp: new Date().toISOString(),
     },
   };
@@ -151,6 +204,7 @@ async function runDiagnosis(payload) {
  * Build enriched context string from Layer 1 & 2 results
  */
 function buildEnrichedContext(dtcResults, sensorAnomalies, payload) {
+  const tStart = performance.now();
   let context = '';
 
   // DTC context
@@ -208,6 +262,8 @@ function buildEnrichedContext(dtcResults, sensorAnomalies, payload) {
     }
   }
 
+  const tDuration = performance.now() - tStart;
+  console.log(`[3-Layer:Context] 📝 buildEnrichedContext() selesai dalam ${tDuration.toFixed(2)}ms (${context.length} karakter)`);
   return context;
 }
 
@@ -215,6 +271,7 @@ function buildEnrichedContext(dtcResults, sensorAnomalies, payload) {
  * Save diagnosis session to database
  */
 async function saveDiagnosisSession(sessionId, requestPayload, diagnosisResult) {
+  const tStart = performance.now();
   try {
     const result = await db.query(
       `INSERT INTO ai_sessions (session_id, request_json, response_json, parsed_summary, model_used, tokens_used, latency_ms)
@@ -230,9 +287,12 @@ async function saveDiagnosisSession(sessionId, requestPayload, diagnosisResult) 
         diagnosisResult.metadata.ai_latency_ms,
       ]
     );
+    const tDuration = performance.now() - tStart;
+    console.log(`[3-Layer:Database] 💾 saveDiagnosisSession() selesai dalam ${tDuration.toFixed(2)}ms (Session ID: ${sessionId})`);
     return result.rows[0];
   } catch (error) {
-    console.error('[Diagnosis] Error saving session:', error.message);
+    const tDuration = performance.now() - tStart;
+    console.error(`[3-Layer:Database] ❌ Error saving session (${tDuration.toFixed(2)}ms):`, error.message);
     return null;
   }
 }
@@ -242,4 +302,5 @@ module.exports = {
   validateSensors,
   runDiagnosis,
   saveDiagnosisSession,
+  getAiProvider,
 };

@@ -18,6 +18,8 @@ router.use(aiLimiter);
  * Full 3-layer AI diagnosis (DTC + Live Data + Freeze Frame + Context)
  */
 router.post('/diagnose', async (req, res) => {
+  const tRouteStart = performance.now();
+  console.log(`[AI Route:HTTP] 📥 POST /api/ai/diagnose diterima pada ${new Date().toLocaleTimeString('id-ID')}`);
   try {
     const payload = req.body;
 
@@ -39,17 +41,23 @@ router.post('/diagnose', async (req, res) => {
 
     // Generate receipt data if requested
     if (payload.include_receipt) {
+      const tReceiptStart = performance.now();
       result.receipt = receiptService.generateReceiptData(
         { id: payload.session_id || 'temp', technician_name: payload.technician || 'Mekanik' },
         result,
         payload.motor
       );
       result.receipt_text_58mm = receiptService.generateReceiptText58mm(result.receipt);
+      const tReceiptDuration = performance.now() - tReceiptStart;
+      console.log(`[AI Route:Receipt] 🧾 Struk diagnosis & ESC/POS 58mm dibuat dalam ${tReceiptDuration.toFixed(2)}ms`);
     }
 
+    const tRouteDuration = performance.now() - tRouteStart;
+    console.log(`[AI Route:HTTP] 📤 Response /api/ai/diagnose selesai diproses & dikirim dalam ${tRouteDuration.toFixed(2)}ms\n`);
     res.json(result);
   } catch (error) {
-    console.error('[AI Route] Diagnosis error:', error);
+    const tRouteDuration = performance.now() - tRouteStart;
+    console.error(`[AI Route:HTTP] ❌ Diagnosis error (${tRouteDuration.toFixed(2)}ms):`, error);
     res.status(500).json({
       error: 'Internal Server Error',
       message: 'Terjadi kesalahan saat memproses diagnosis AI.',
@@ -72,7 +80,8 @@ router.post('/chat', async (req, res) => {
       });
     }
 
-    const result = await geminiService.chat(message, history || []);
+    const aiProvider = diagnosisService.getAiProvider();
+    const result = await aiProvider.chat(message, history || []);
     res.json({
       ...result,
       message: result.reply,

@@ -1,13 +1,61 @@
 // ============================================
 // WRT Garage — Ultra-Low Latency Google Gemini AI Service
-// Layer 3: High-Speed AI Reasoning (< 1.5s) via Gemini 3.5 Flash Lite
+// Layer 3: High-Speed AI Reasoning via Gemini
 // ============================================
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 
-const GEMINI_API_KEY = process.env.GEMINI_API_KEY || '';
-const DEFAULT_MODEL = process.env.GEMINI_MODEL || 'gemini-3.6-flash';
+/**
+ * Retrieve GoogleGenerativeAI instance dynamically using GEMINI_API_KEY from .env
+ */
+function getGenAI() {
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey) {
+    throw new Error('GEMINI_API_KEY belum dikonfigurasi di file .env');
+  }
+  return new GoogleGenerativeAI(apiKey);
+}
 
-const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
+/**
+ * Retrieve list of models configured strictly in .env
+ */
+function getConfiguredModels() {
+  const models = [
+    process.env.GEMINI_MODEL,
+    process.env.GEMINI_FALLBACK_MODEL,
+  ].filter(Boolean);
+
+  if (models.length === 0) {
+    throw new Error('GEMINI_MODEL belum dikonfigurasi di file .env');
+  }
+  return Array.from(new Set(models));
+}
+
+function getAiTimeout() {
+  return parseInt(process.env.AI_TIMEOUT_MS, 10) || 15000;
+}
+
+/**
+ * Minify payload by stripping empty, null, or undefined fields to save token bandwidth
+ */
+function minifyPayload(payload) {
+  if (!payload || typeof payload !== 'object') return payload;
+  if (Array.isArray(payload)) {
+    return payload.map(minifyPayload).filter((v) => v !== null && v !== undefined && v !== '');
+  }
+  const cleaned = {};
+  for (const [key, value] of Object.entries(payload)) {
+    if (value === null || value === undefined || value === '') continue;
+    if (Array.isArray(value)) {
+      if (value.length > 0) cleaned[key] = value;
+    } else if (typeof value === 'object') {
+      const nested = minifyPayload(value);
+      if (Object.keys(nested).length > 0) cleaned[key] = nested;
+    } else {
+      cleaned[key] = value;
+    }
+  }
+  return cleaned;
+}
 
 // In-Memory Fast Cache for Diagnosis (TTL: 1 hour)
 const diagnosisCache = new Map();
@@ -77,8 +125,11 @@ async function diagnose(payload, enrichedContext) {
   const cacheKey = getCacheKey(payload);
 
   // Check In-Memory Cache (< 5ms response)
+  const tCacheStart = performance.now();
   const cached = diagnosisCache.get(cacheKey);
   if (cached && (Date.now() - cached.timestamp) < CACHE_TTL_MS) {
+    const tCacheDuration = performance.now() - tCacheStart;
+    console.log(`[Gemini:Cache] ⚡ Cache HIT dalam ${tCacheDuration.toFixed(2)}ms (Key: ${cacheKey})`);
     return {
       success: true,
       diagnosis: cached.data,
@@ -90,36 +141,49 @@ async function diagnose(payload, enrichedContext) {
       },
     };
   }
+  console.log(`[Gemini:Cache] 💨 Cache MISS dalam ${(performance.now() - tCacheStart).toFixed(2)}ms (Key: ${cacheKey})`);
 
-  const userPrompt = `${SYSTEM_PROMPT}
+  const cleanPayload = minifyPayload(payload);
+  const userPrompt = `DATA ECU HONDA PGM-FI:
+${JSON.stringify(cleanPayload)}
 
-DATA ECU:
-${JSON.stringify(payload, null, 2)}
-
-DATABASE CONTEXT:
+DATABASE CONTEXT (Layer 1 & 2):
 ${enrichedContext}
 
 Hasilkan output diagnosis JSON:`;
 
-  // Candidate models: Use direct Gemini 3.6 Flash
-  const modelsToTry = ['gemini-3.6-flash'];
+  // Candidate models: Primary model from .env followed by fallback
+  const genAI = getGenAI();
+  const modelsToTry = getConfiguredModels();
+  const aiTimeout = getAiTimeout();
+  const perModelTimeout = Math.min(aiTimeout, 15000); // Fast failover max 15s per model trial
+  let lastError = null;
 
   for (const mName of modelsToTry) {
     try {
+      console.log(`[Gemini:API] 🌐 Memanggil API Gemini (Model: "${mName}", Timeout: ${perModelTimeout}ms)...`);
+      const tModelStart = performance.now();
+
       const model = genAI.getGenerativeModel({
         model: mName,
+        systemInstruction: SYSTEM_PROMPT,
         generationConfig: {
           responseMimeType: 'application/json',
           temperature: 0.2,
-          maxOutputTokens: 3072,
+          maxOutputTokens: 2048,
         },
       });
 
       const result = await Promise.race([
         model.generateContent(userPrompt),
-        timeoutPromise(45000),
+        timeoutPromise(perModelTimeout),
       ]);
+      const tModelDuration = performance.now() - tModelStart;
       const latencyMs = Date.now() - startTime;
+      const tokensUsed = result.response.usageMetadata?.totalTokenCount || 0;
+      console.log(`[Gemini:API] ⚡ Model "${mName}" selesai merespons dalam ${tModelDuration.toFixed(2)}ms (Tokens: ${tokensUsed})`);
+
+      const tParseStart = performance.now();
       let responseText = (result.response.text() || '{}').trim();
       responseText = responseText.replace(/^```json\s*/i, '').replace(/^```\s*/i, '').replace(/\s*```$/i, '').trim();
 
@@ -147,6 +211,7 @@ Hasilkan output diagnosis JSON:`;
           };
         }
       }
+      console.log(`[Gemini:Parser] 🧩 Parsing & verifikasi JSON selesai dalam ${(performance.now() - tParseStart).toFixed(2)}ms`);
 
       // Store in high-speed cache
       diagnosisCache.set(cacheKey, {
@@ -167,28 +232,29 @@ Hasilkan output diagnosis JSON:`;
         },
       };
     } catch (err) {
-      console.warn(`[Gemini Fast] Model ${mName} error: ${err.message}. Trying next candidate...`);
+      lastError = err;
+      const is403 = err.status === 403 || String(err.message).includes('403');
+      if (is403) {
+        console.error(`[Gemini AI] ❌ Error 403 Forbidden pada model "${mName}": ${err.message}`);
+        console.error(`[Gemini AI] 💡 Tips: Pastikan model "${mName}" tersedia untuk key ini (periksa konfigurasi GEMINI_MODEL / GEMINI_FALLBACK_MODEL di .env) dan Generative Language API aktif di project Google Anda.`);
+      } else {
+        console.warn(`[Gemini Fast] Model ${mName} error: ${err.message}. Mencoba kandidat berikutnya...`);
+      }
     }
   }
 
-  // Graceful fallback to Local Rule Engine (< 2ms)
-  console.warn('[Gemini Fast] Remote fallback. Activating WRT Local AI Engine.');
-  const localDiagnosis = generateLocalDiagnosis(payload, enrichedContext);
-
-  diagnosisCache.set(cacheKey, {
-    data: localDiagnosis,
-    model: 'WRT-MasterTech-Engine-v2.0 (Local Fast)',
-    tokens: 350,
-    timestamp: Date.now(),
-  });
+  // All cloud models failed
+  const errMsg = lastError ? lastError.message : 'Semua kandidat model AI gagal merespons';
+  console.error(`[Gemini AI] ❌ Seluruh kandidat model AI gagal: ${errMsg}`);
 
   return {
-    success: true,
-    diagnosis: localDiagnosis,
+    success: false,
+    error: `Diagnosis AI tidak dapat diselesaikan: ${errMsg}`,
+    diagnosis: null,
     metadata: {
-      provider: 'WRT Local Engine',
-      model_used: 'WRT-MasterTech-Engine-v2.0 (Local Fast)',
-      tokens_used: 350,
+      provider: 'Google Gemini',
+      model_used: 'None',
+      tokens_used: 0,
       latency_ms: Date.now() - startTime,
     },
   };
@@ -229,15 +295,21 @@ function cleanChatHistory(rawHistory) {
  */
 async function chat(message, history = []) {
   const startTime = Date.now();
-  const modelsToTry = Array.from(new Set([
-    DEFAULT_MODEL,
-    'gemini-3.6-flash',
-  ]));
+  const genAI = getGenAI();
+  const modelsToTry = getConfiguredModels();
+  const aiTimeout = getAiTimeout();
+  const perModelTimeout = Math.min(aiTimeout, 15000);
+  let lastError = null;
 
+  const tCleanStart = performance.now();
   const formattedHistory = cleanChatHistory(history);
+  console.log(`[Gemini:Chat] 🧹 History dibersihkan dalam ${(performance.now() - tCleanStart).toFixed(2)}ms (${formattedHistory.length} pesan)`);
 
   for (const mName of modelsToTry) {
     try {
+      console.log(`[Gemini:Chat] 💬 Mengirim pesan chat ke model "${mName}"...`);
+      const tChatModelStart = performance.now();
+
       const model = genAI.getGenerativeModel({
         model: mName,
         systemInstruction: CHAT_SYSTEM_PROMPT,
@@ -253,10 +325,12 @@ async function chat(message, history = []) {
 
       const result = await Promise.race([
         chatSession.sendMessage(message),
-        timeoutPromise(35000),
+        timeoutPromise(perModelTimeout),
       ]);
       const reply = result.response.text();
       const latencyMs = Date.now() - startTime;
+      const tChatModelDuration = performance.now() - tChatModelStart;
+      console.log(`[Gemini:Chat] ✅ Chat model "${mName}" selesai merespons dalam ${tChatModelDuration.toFixed(2)}ms`);
 
       return {
         success: true,
@@ -269,107 +343,33 @@ async function chat(message, history = []) {
         },
       };
     } catch (err) {
-      console.warn(`[Gemini Chat Fast] Model ${mName} error: ${err.message}`);
+      lastError = err;
+      const is403 = err.status === 403 || String(err.message).includes('403');
+      if (is403) {
+        console.error(`[Gemini Chat] ❌ Error 403 Forbidden pada model "${mName}": ${err.message}`);
+        console.error(`[Gemini Chat] 💡 Tips: Pastikan model "${mName}" aktif di project Google Anda dan kuota/izin API masih berlaku.`);
+      } else {
+        console.warn(`[Gemini Chat Fast] Model ${mName} error: ${err.message}`);
+      }
     }
   }
 
-  // Fallback to local expert chat
-  const localReply = generateLocalChat(message, history);
+  // All chat models failed
+  const errMsg = lastError ? lastError.message : 'Semua model AI gagal merespons';
+  console.error(`[Gemini Chat] ❌ Seluruh kandidat chat gagal: ${errMsg}`);
   return {
-    success: true,
-    reply: localReply,
+    success: false,
+    reply: `Maaf, layanan AI saat ini tidak dapat dihubungi (${errMsg}). Silakan periksa koneksi internet atau kuota API key Anda.`,
     metadata: {
-      provider: 'WRT Local Engine',
-      model_used: 'WRT-MasterTech-Engine-v2.0 (Local)',
-      tokens_used: 250,
+      provider: 'Google Gemini',
+      model_used: 'None',
+      tokens_used: 0,
       latency_ms: Date.now() - startTime,
     },
   };
 }
 
-/**
- * Local Fallback Diagnosis Engine (< 2ms)
- */
-function generateLocalDiagnosis(payload, enrichedContext) {
-  const dtcCodes = [...(payload.dtc?.active || []), ...(payload.dtc?.pending || [])];
-  const live = payload.live_data || {};
-  const motor = payload.motor?.model || payload.motor || 'Honda PGM-FI';
-
-  if (dtcCodes.includes('P0113') || (live.iat_celsius !== undefined && live.iat_celsius <= -30)) {
-    return {
-      summary: `Malfungsi sensor IAT pada motor ${motor}. Suhu -40°C mengindikasikan sirkuit terbuka (Open Circuit) atau kabel terlepas.`,
-      risk_level: 'medium',
-      primary_cause: {
-        description: 'Sirkuit Sensor IAT Open Circuit / Soket Sensor Lepas atau Kabel Putus ke Pin ECM',
-        confidence: '95%',
-        evidence: [
-          'DTC P0113 aktif di memori ECM',
-          live.iat_celsius !== undefined ? `Nilai IAT terbaca ${live.iat_celsius}°C (standar: 20°C - 60°C)` : 'Sensor IAT membaca tegangan 5.0V',
-        ],
-      },
-      alternative_causes: [
-        { description: 'Sensor IAT internal rusak', confidence: '4%' },
-        { description: 'Pin terminal ECM korosi atau kendor', confidence: '1%' },
-      ],
-      check_steps: [
-        'Periksa soket sensor IAT di box filter udara.',
-        'Ukur voltase referensi pada kabel Abu-abu/Biru (standar: 4.75V - 5.25V).',
-        'Ukur kontinuitas kabel Hijau/Hitam ke ground massa.',
-        'Ukur resistansi sensor IAT pada suhu ruangan 25°C (standar: 1.0 kΩ - 4.0 kΩ).',
-        'Lakukan Reset ECM dan Reset Sensor TP setelah perbaikan.',
-      ],
-      additional_data_needed: [],
-      safety_warning: null,
-    };
-  }
-
-  return {
-    summary: `Analisis sistem Honda PGM-FI pada motor ${motor} selesai. Seluruh sensor bekerja dalam rentang normal optimal.`,
-    risk_level: 'low',
-    primary_cause: {
-      description: 'Sistem Injeksi PGM-FI Normal & Sehat',
-      confidence: '98%',
-      evidence: ['Tidak ada kode kerusakan (DTC) aktif', 'RPM idle dan voltase baterai stabil'],
-    },
-    alternative_causes: [],
-    check_steps: [
-      'Lakukan pembersihan throttle body berkala setiap 10.000 KM.',
-      'Ganti busi dan filter udara sesuai jadwal servis rutin.',
-    ],
-    additional_data_needed: [],
-    safety_warning: null,
-  };
-}
-
-/**
- * Local Expert Chat Engine (< 1ms)
- */
-function generateLocalChat(message, history) {
-  const query = message.toLowerCase();
-
-  if (query.includes('p0113') || query.includes('iat') || query.includes('9 kedipan')) {
-    return `🔧 **Sensor IAT (DTC P0113 / 9 Kedipan MIL):**
-1. Periksa soket sensor IAT di filter udara (kabel kendor/terlepas).
-2. Tegangan kabel referensi: **4.75 - 5.25 V**.
-3. Resistansi sensor: **1.0 - 4.0 kΩ** (suhu 25°C).
-4. Lakukan reset ECM setelah selesai perbaikan.`;
-  }
-
-  if (query.includes('reset') && (query.includes('ecm') || query.includes('ecu') || query.includes('tps'))) {
-    return `⚙️ **Reset ECM & Sensor TP Honda:**
-1. Pasang DLC Short Connector.
-2. Putar kontak ke **ON**, cabut jumper lalu tancapkan kembali dalam waktu **< 5 detik**.
-3. Lampu MIL berkedip cepat (reset berhasil).
-4. Matikan kontak dan hidupkan mesin untuk idle learning 10 menit.`;
-  }
-
-  return `Halo! Saya **WRT AI Master Technician** bertenaga Google Gemini Ultra-Fast. 
-Silakan tanyakan seputar kode DTC, data sensor, prosedur reset, atau masalah motor Honda PGM-FI!`;
-}
-
 module.exports = {
   diagnose,
   chat,
-  generateLocalDiagnosis,
-  generateLocalChat,
 };

@@ -3,8 +3,12 @@
 // Version: 2.0 (Mobile & Web)
 // ============================================
 
-const API_BASE = 'http://localhost:3000/api';
-const API_KEY = 'wrt-garage-api-key-change-this-in-production';
+// Runtime environment configuration with dynamic network fallback
+const envConfig = (typeof window !== 'undefined' && window.__ENV__) || {};
+const API_BASE = envConfig.API_BASE_URL || (typeof window !== 'undefined' && window.location
+  ? `${window.location.protocol}//${window.location.hostname}:3000/api`
+  : 'http://localhost:3000/api');
+const API_KEY = envConfig.API_KEY || 'wrt-garage-api-key-change-this-in-production';
 
 // Global Telemetry & App State
 const state = {
@@ -84,18 +88,66 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // ============================================
-// 1. Navigation Controller
+// 1. Navigation Controller & Mobile Drawer
 // ============================================
 function initNavigation() {
+  const sidebar = document.getElementById('appSidebar');
+  const sidebarToggleBtn = document.getElementById('sidebarToggleBtn');
+  const sidebarCloseBtn = document.getElementById('sidebarCloseBtn');
+  const sidebarBackdrop = document.getElementById('sidebarBackdrop');
+  const bottomNavMenuBtn = document.getElementById('bottomNavMenuBtn');
+
+  function openSidebar() {
+    sidebar?.classList.add('open');
+    sidebarBackdrop?.classList.add('active');
+    document.body.style.overflow = window.innerWidth <= 768 ? 'hidden' : '';
+  }
+
+  function closeSidebar() {
+    sidebar?.classList.remove('open');
+    sidebarBackdrop?.classList.remove('active');
+    document.body.style.overflow = '';
+  }
+
+  sidebarToggleBtn?.addEventListener('click', (e) => {
+    e.stopPropagation();
+    if (sidebar?.classList.contains('open')) {
+      closeSidebar();
+    } else {
+      openSidebar();
+    }
+  });
+
+  sidebarCloseBtn?.addEventListener('click', (e) => {
+    e.stopPropagation();
+    closeSidebar();
+  });
+
+  sidebarBackdrop?.addEventListener('click', () => {
+    closeSidebar();
+  });
+
+  bottomNavMenuBtn?.addEventListener('click', (e) => {
+    e.stopPropagation();
+    openSidebar();
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') closeSidebar();
+  });
+
   const navLinks = document.querySelectorAll('.nav-link');
   navLinks.forEach((link) => {
     link.addEventListener('click', () => {
       const targetId = link.getAttribute('data-target');
       if (!targetId) return;
 
-      navLinks.forEach((l) => l.classList.remove('active'));
-      link.classList.add('active');
+      // Synchronize active state on all matching nav links (sidebar & bottom navbar)
+      navLinks.forEach((l) => {
+        l.classList.toggle('active', l.getAttribute('data-target') === targetId);
+      });
 
+      // Switch active content view
       document.querySelectorAll('.content-view').forEach((view) => {
         view.classList.remove('active');
       });
@@ -105,6 +157,16 @@ function initNavigation() {
         targetView.classList.add('active');
         state.activeView = targetId;
       }
+
+      // Close mobile drawer if open
+      if (window.innerWidth <= 768) {
+        closeSidebar();
+      }
+
+      // Scroll smoothly to top
+      const mainContent = document.getElementById('mainContent');
+      if (mainContent) mainContent.scrollTop = 0;
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     });
   });
 
@@ -595,11 +657,16 @@ function renderDtcList() {
   const container = document.getElementById('dtcItemsContainer');
   const countBadge = document.getElementById('dtcActiveCountBadge');
   const bannerBadge = document.getElementById('dtcAlertBadge');
+  const miniBadge = document.getElementById('dtcAlertBadgeMini');
   const bannerCodes = document.getElementById('dtcBannerCodes');
   const dtcBanner = document.getElementById('dtcBanner');
 
   if (countBadge) countBadge.textContent = `${state.activeDTCs.length} Aktif`;
   if (bannerBadge) bannerBadge.textContent = `${state.activeDTCs.length} DTC`;
+  if (miniBadge) {
+    miniBadge.textContent = state.activeDTCs.length;
+    miniBadge.style.display = state.activeDTCs.length > 0 ? 'inline-flex' : 'none';
+  }
 
   if (state.activeDTCs.length === 0) {
     if (dtcBanner) dtcBanner.style.display = 'none';
@@ -805,6 +872,10 @@ function initAiStudio() {
 }
 
 async function executeAiDiagnosis() {
+  const tClientStart = performance.now();
+  console.group('%c[3-Layer AI Diagnosis Studio] Memulai Proses Diagnosis', 'color: #00ffcc; font-weight: bold; font-size: 13px;');
+  console.log(`⏰ Waktu Mulai: ${new Date().toLocaleTimeString('id-ID')}`);
+
   const btn = document.getElementById('btnRunAiDiagnosis');
   const spinner = document.getElementById('aiSpinner');
   const btnText = document.getElementById('btnRunAiText');
@@ -813,6 +884,7 @@ async function executeAiDiagnosis() {
   spinner.classList.remove('hidden');
   btnText.textContent = 'Memproses 3-Layer AI Diagnosis...';
 
+  const tPackStart = performance.now();
   const payload = {
     motor: {
       model: state.currentVehicle.name,
@@ -836,8 +908,13 @@ async function executeAiDiagnosis() {
     } : null,
     include_receipt: document.getElementById('aiIncludeReceipt')?.checked || true,
   };
+  const tPackDuration = performance.now() - tPackStart;
+  console.log(`📦 [Client:Packaging] Payload disiapkan dalam ${tPackDuration.toFixed(2)}ms`);
 
   try {
+    console.log(`🌐 [Client:Network] Mengirim request ke Backend API (${API_BASE}/ai/diagnose)...`);
+    const tFetchStart = performance.now();
+
     const res = await fetch(`${API_BASE}/ai/diagnose`, {
       method: 'POST',
       headers: {
@@ -847,15 +924,44 @@ async function executeAiDiagnosis() {
       body: JSON.stringify(payload),
     });
 
+    const tFetchDuration = performance.now() - tFetchStart;
+    console.log(`📡 [Client:Network] Response HTTP ${res.status} diterima dalam ${tFetchDuration.toFixed(2)}ms`);
+
     if (!res.ok) {
       throw new Error(`HTTP Error ${res.status}`);
     }
 
+    const tJsonStart = performance.now();
     const result = await res.json();
+    console.log(`🧩 [Client:JSON] Deserialisasi JSON response dalam ${(performance.now() - tJsonStart).toFixed(2)}ms`);
+
+    // Log Server 3-Layer Breakdown Table to Console
+    if (result.metadata?.timings) {
+      const tm = result.metadata.timings;
+      console.log('%c⏱️ Rekap Waktu Pemrosesan Server per Fungsi:', 'color: #f59e0b; font-weight: bold;');
+      console.table({
+        'Layer 1 (DTC Lookup)': { 'Waktu (ms)': tm.layer1_dtc_ms },
+        'Layer 2 (Sensor Validation)': { 'Waktu (ms)': tm.layer2_sensors_ms },
+        'Context Builder': { 'Waktu (ms)': tm.context_build_ms },
+        'Layer 3 (AI Model Inference)': { 'Waktu (ms)': tm.layer3_ai_ms },
+        'Total Server Execution': { 'Waktu (ms)': tm.total_ms },
+        'Total Roundtrip (Network+Server)': { 'Waktu (ms)': Number(tFetchDuration.toFixed(2)) },
+      });
+    }
+
+    const tRenderStart = performance.now();
     renderAiResult(result);
-    showToast('Analisis 3-Layer AI Diagnosis Selesai', 'success');
+    const tRenderDuration = performance.now() - tRenderStart;
+    console.log(`🎨 [Client:Render] UI 3-Layer selesai dirender dalam ${tRenderDuration.toFixed(2)}ms`);
+
+    const tClientTotal = performance.now() - tClientStart;
+    console.log(`%c🏁 [Client:Total] Siklus Diagnosis Lengkap Selesai dalam ${tClientTotal.toFixed(2)}ms`, 'color: #10b981; font-weight: bold;');
+    console.groupEnd();
+
+    showToast(`Analisis 3-Layer Selesai (${Math.round(tClientTotal)}ms)`, 'success');
   } catch (err) {
     console.error('Diagnosis Error:', err);
+    console.groupEnd();
     showToast(`Gagal memproses diagnosis: ${err.message}`, 'danger');
   } finally {
     btn.disabled = false;
@@ -873,11 +979,35 @@ function renderAiResult(result) {
 
   const ai = result.layers?.layer3_ai || {};
   const meta = result.metadata || {};
+  const tm = meta.timings;
 
-  // Update Meta & Risk Badge
-  document.getElementById('aiResultMeta').textContent = `Latency: ${meta.total_latency_ms || 820}ms • Engine: ${meta.ai_model || 'WRT Engine'}`;
+  // Update Meta & Risk Badge with Timing Breakdown
+  let latencyDisplay = `Latency: ${meta.total_latency_ms || 0}ms`;
+  if (tm) {
+    latencyDisplay = `Total: ${meta.total_latency_ms}ms (L1: ${tm.layer1_dtc_ms}ms • L2: ${tm.layer2_sensors_ms}ms • L3: ${tm.layer3_ai_ms}ms)`;
+  }
+  latencyDisplay += ` • Engine: ${meta.ai_model || 'WRT Engine'}`;
+  document.getElementById('aiResultMeta').textContent = latencyDisplay;
   
   const riskBadge = document.getElementById('aiRiskBadge');
+
+  if (!result.success || ai.error) {
+    if (riskBadge) {
+      riskBadge.className = 'risk-badge risk-high';
+      riskBadge.textContent = 'AI FAILED';
+    }
+    document.getElementById('aiSummaryText').textContent = ai.error || result.error || 'Layanan AI Cloud tidak dapat dihubungi. Silakan periksa koneksi internet atau API key.';
+    document.getElementById('aiPrimaryCauseDesc').textContent = 'Gagal memproses reasoning AI dari cloud provider.';
+    document.getElementById('aiConfidencePill').textContent = 'Keyakinan: 0%';
+    const evContainer = document.getElementById('aiEvidenceList');
+    if (evContainer) evContainer.innerHTML = '';
+    const altContainer = document.getElementById('aiAltCausesGrid');
+    if (altContainer) altContainer.innerHTML = '';
+    const stepsContainer = document.getElementById('aiCheckStepsList');
+    if (stepsContainer) stepsContainer.innerHTML = '<li>Periksa kuota dan validitas API Key Google AI Studio</li><li>Pastikan model yang ditentukan di .env aktif</li>';
+    return;
+  }
+
   if (riskBadge) {
     const risk = (ai.risk_level || 'medium').toLowerCase();
     riskBadge.className = `risk-badge risk-${risk}`;
@@ -1120,10 +1250,19 @@ function initPrinterView() {
     window.print();
   });
 
+  const zebraIpInput = document.getElementById('zebraPrinterIp');
+  if (zebraIpInput && !zebraIpInput.value && envConfig.DEFAULT_PRINTER_IP) {
+    zebraIpInput.value = envConfig.DEFAULT_PRINTER_IP;
+  }
+  const zebraPortInput = document.getElementById('zebraPrinterPort');
+  if (zebraPortInput && !zebraPortInput.value && envConfig.DEFAULT_PRINTER_PORT) {
+    zebraPortInput.value = envConfig.DEFAULT_PRINTER_PORT;
+  }
+
   // Direct IP Network Print
   btnSendZplNet?.addEventListener('click', async () => {
-    const ip = document.getElementById('zebraPrinterIp')?.value.trim();
-    const port = parseInt(document.getElementById('zebraPrinterPort')?.value || '9100', 10);
+    const ip = (document.getElementById('zebraPrinterIp')?.value || envConfig.DEFAULT_PRINTER_IP || '').trim();
+    const port = parseInt(document.getElementById('zebraPrinterPort')?.value || envConfig.DEFAULT_PRINTER_PORT || '9100', 10);
 
     if (!ip) {
       showToast('Masukkan IP address printer Zebra!', 'danger');

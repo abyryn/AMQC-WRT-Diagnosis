@@ -5,6 +5,11 @@
 // Layer 3: Google Gemini AI Reasoning
 // ============================================
 
+const DEFAULT_SHOP_NAME = process.env.SHOP_NAME || 'WRT DIAGNOSIS AGENT AI';
+const DEFAULT_SHOP_ADDRESS = process.env.SHOP_ADDRESS || 'Astra Motor Cokroaminoto';
+const DEFAULT_PRINTER_PORT = parseInt(process.env.PRINTER_DEFAULT_PORT) || 9100;
+const DEFAULT_PRINTER_TIMEOUT = parseInt(process.env.PRINTER_TIMEOUT_MS) || 5000;
+
 /**
  * Generate comprehensive 3-layer receipt data object
  * @param {Object} sessionData - Service session data
@@ -28,12 +33,12 @@ function generateReceiptData(sessionData, diagnosisResult, vehicleData) {
 
   return {
     header: {
-      shop_name: sessionData?.shop_name || 'WRT DIAGNOSIS AGENT AI',
-      shop_address: sessionData?.shop_address || 'Jl. Otista Raya No. 88 | WA: 0812-3456-7890',
+      shop_name: sessionData?.shop_name || DEFAULT_SHOP_NAME,
+      shop_address: sessionData?.shop_address || DEFAULT_SHOP_ADDRESS,
       report_type: '3-LAYER HONDA PGM-FI DIAGNOSTIC REPORT',
       date: dateStr,
       time: timeStr,
-      ai_engine: meta.ai_model || 'Google Gemini 3.5 Flash',
+      ai_engine: meta.ai_model || process.env.GEMINI_MODEL || 'WRT AI Engine',
       latency_ms: meta.total_latency_ms || meta.ai_latency_ms || 850,
     },
     vehicle: {
@@ -439,7 +444,7 @@ function generateReceiptZPL(receiptData, options = {}) {
  */
 function generateReceiptHTML(receiptData) {
   const riskClass = (receiptData.layer3_ai.risk_level || 'MEDIUM').toLowerCase();
-  
+
   return `<!DOCTYPE html>
 <html lang="id">
 <head>
@@ -554,7 +559,7 @@ function generateReceiptHTML(receiptData) {
 /**
  * Send raw ZPL string to network Zebra printer via TCP socket (port 9100)
  */
-function sendZplToNetworkPrinter(ip, port = 9100, zplString, timeoutMs = 5000) {
+function sendZplToNetworkPrinter(ip, port = DEFAULT_PRINTER_PORT, zplString, timeoutMs = DEFAULT_PRINTER_TIMEOUT) {
   const net = require('net');
   return new Promise((resolve, reject) => {
     const client = new net.Socket();

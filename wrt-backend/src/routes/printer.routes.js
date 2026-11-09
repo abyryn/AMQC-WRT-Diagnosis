@@ -35,8 +35,10 @@ router.post('/zpl', (req, res) => {
 router.post('/zpl/send', async (req, res) => {
   try {
     const { ip, port, zpl, receiptData } = req.body;
+    const targetIp = ip || process.env.PRINTER_DEFAULT_IP;
+    const targetPort = port || parseInt(process.env.PRINTER_DEFAULT_PORT) || 9100;
 
-    if (!ip) {
+    if (!targetIp) {
       return res.status(400).json({
         error: 'Bad Request',
         message: 'IP Address printer wajib diisi (contoh: 192.168.1.100).',
@@ -55,7 +57,7 @@ router.post('/zpl/send', async (req, res) => {
       });
     }
 
-    const result = await receiptService.sendZplToNetworkPrinter(ip, port || 9100, zplToSend);
+    const result = await receiptService.sendZplToNetworkPrinter(targetIp, targetPort, zplToSend);
     res.json(result);
   } catch (error) {
     console.error('[Printer Route] Direct network print error:', error);
@@ -125,7 +127,7 @@ router.get('/3layer/html', (req, res) => {
             safety_warning: 'Pastikan kunci kontak OFF sebelum melepas soket sensor.',
           },
         },
-        metadata: { ai_model: 'Google Gemini 3.5 Flash', total_latency_ms: 780 },
+        metadata: { ai_model: process.env.GEMINI_MODEL || 'Google Gemini', total_latency_ms: 780 },
       },
       { plate_number: 'B 4521 WRT', model: 'Honda PCX 160 eSP+', mileage_km: 14250, part_number: '30400-K1Z-N01' }
     );

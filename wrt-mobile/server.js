@@ -6,6 +6,24 @@ const http = require('http');
 const fs = require('fs');
 const path = require('path');
 
+// Auto-load environment variables from .env
+const envPath = path.join(__dirname, '.env');
+if (fs.existsSync(envPath)) {
+  const lines = fs.readFileSync(envPath, 'utf-8').split('\n');
+  for (const line of lines) {
+    const trimmed = line.trim();
+    if (!trimmed || trimmed.startsWith('#')) continue;
+    const eqIdx = trimmed.indexOf('=');
+    if (eqIdx !== -1) {
+      const key = trimmed.slice(0, eqIdx).trim();
+      const val = trimmed.slice(eqIdx + 1).trim().replace(/^["']|["']$/g, '');
+      if (process.env[key] === undefined) {
+        process.env[key] = val;
+      }
+    }
+  }
+}
+
 const PORT = process.env.PORT || 8080;
 const PUBLIC_DIR = path.join(__dirname, 'public');
 
@@ -33,6 +51,23 @@ const server = http.createServer((req, res) => {
   }
 
   let reqPath = req.url.split('?')[0];
+
+  // Dynamic runtime configuration injection from environment (.env)
+  if (reqPath === '/config.js') {
+    const hostHeader = req.headers.host ? req.headers.host.split(':')[0] : 'localhost';
+    const dynamicApiBase = process.env.API_BASE_URL || `http://${hostHeader}:3000/api`;
+    const configPayload = {
+      API_BASE_URL: dynamicApiBase,
+      API_KEY: process.env.API_KEY || 'wrt-garage-api-key-change-this-in-production',
+      DEFAULT_PRINTER_IP: process.env.DEFAULT_PRINTER_IP || '192.168.1.100',
+      DEFAULT_PRINTER_PORT: parseInt(process.env.DEFAULT_PRINTER_PORT) || 9100,
+    };
+    const body = `window.__ENV__ = Object.freeze(${JSON.stringify(configPayload, null, 2)});`;
+    res.writeHead(200, { 'Content-Type': 'application/javascript; charset=utf-8' });
+    res.end(body);
+    return;
+  }
+
   if (reqPath === '/') {
     reqPath = '/index.html';
   }
@@ -66,12 +101,15 @@ const server = http.createServer((req, res) => {
 });
 
 server.listen(PORT, '0.0.0.0', () => {
+  const backendUrl = process.env.API_BASE_URL || `http://localhost:3000/api`;
   console.log('============================================');
   console.log('  WRT Garage — Frontend Web & Mobile App v2.0');
   console.log('  Honda PGM-FI AI Diagnostic Tool');
   console.log('============================================');
   console.log(`  Local URL   : http://localhost:${PORT}`);
   console.log(`  Network URL : http://0.0.0.0:${PORT}`);
-  console.log(`  Backend API : http://localhost:3000/api`);
+  console.log(`  Backend API : ${backendUrl}`);
   console.log('============================================');
 });
+
+module.exports = server;

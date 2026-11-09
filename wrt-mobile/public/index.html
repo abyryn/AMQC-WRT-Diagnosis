@@ -20,12 +20,29 @@
     
     <!-- Top Header Bar -->
     <header class="top-header" id="topHeader">
-      <div class="header-brand">
-        <div class="logo-badge">
-          <span class="logo-icon">WRT</span>
-          <div class="brand-text">
-            <h1 class="brand-title">WRT DIAGNOSIS SYSTEM</h1>
-            <span class="brand-subtitle">HONDA PGM-FI AI DIAGNOSTIC v2.0</span>
+      <div class="header-left">
+        <!-- Mobile Sidebar Hamburger Toggle -->
+        <button class="sidebar-toggle-btn" id="sidebarToggleBtn" aria-label="Buka Menu Navigasi" title="Menu Navigasi">
+          <svg class="hamburger-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="3" y1="6" x2="21" y2="6"></line>
+            <line x1="3" y1="12" x2="21" y2="12"></line>
+            <line x1="3" y1="18" x2="21" y2="18"></line>
+          </svg>
+        </button>
+
+        <div class="header-brand">
+          <div class="logo-badge">
+            <div class="brand-logo-emblem" title="WRT Diagnostic System">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+                <polygon points="12,2 22,7.5 22,16.5 12,22 2,16.5 2,7.5" stroke="#e63946" stroke-width="2" fill="rgba(230,57,70,0.2)"/>
+                <polyline points="7,12 10,12 12,8 14,16 16,12 18,12" stroke="#38bdf8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+              <span class="logo-text-bold">WRT</span>
+            </div>
+            <div class="brand-text">
+              <h1 class="brand-title">WRT DIAGNOSIS SYSTEM</h1>
+              <span class="brand-subtitle"><span class="brand-sub-dot"></span>HONDA PGM-FI AI DIAGNOSTIC v2.0</span>
+            </div>
           </div>
         </div>
       </div>
@@ -33,6 +50,12 @@
       <div class="header-center-info">
         <!-- Active Vehicle Selector -->
         <div class="vehicle-selector-wrapper">
+          <svg class="selector-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="5.5" cy="17.5" r="3.5"></circle>
+            <circle cx="18.5" cy="17.5" r="3.5"></circle>
+            <path d="M15 6h-3l-2.5 5.5H16l1.5 3"></path>
+            <path d="M9 17.5l2-6"></path>
+          </svg>
           <label for="vehicleSelect" class="selector-label">Motor Aktif:</label>
           <select id="vehicleSelect" class="custom-select vehicle-select">
             <option value="PCX160" data-code="K1Z" data-part="30400-K1Z-N01" data-mfg="Shindengen">PCX 160 eSP+ (K1Z)</option>
@@ -47,6 +70,9 @@
             <option value="Sonic150R" data-code="K56" data-part="38770-K56-N01" data-mfg="Keihin">Sonic 150R (K56)</option>
             <option value="SupraX125" data-code="KPH" data-part="38770-KPH-881" data-mfg="Keihin">Supra X 125 FI (KPH)</option>
           </select>
+          <svg class="select-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="6 9 12 15 18 9"></polyline>
+          </svg>
         </div>
       </div>
 
@@ -65,43 +91,89 @@
 
         <!-- Simulation Toggle -->
         <button id="simToggleBtn" class="pill-btn active" title="Toggle Live Telemetry Simulation">
+          <span class="sim-pulse-dot"></span>
           <span id="simToggleText">Simulasi: ON</span>
         </button>
       </div>
     </header>
 
+    <!-- Mobile Backdrop Overlay -->
+    <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+
     <!-- Main App Layout with Sidebar and Content -->
     <div class="app-body">
       
       <!-- Left Navigation Sidebar -->
-      <nav class="app-sidebar" id="appSidebar">
+      <nav class="app-sidebar" id="appSidebar" aria-label="Navigasi Samping">
+        <!-- Mobile Drawer Close Header -->
+        <div class="sidebar-mobile-header">
+          <div class="sidebar-brand-mini">
+            <div class="brand-logo-emblem">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                <polygon points="12,2 22,7.5 22,16.5 12,22 2,16.5 2,7.5" stroke="#e63946" stroke-width="2" fill="rgba(230,57,70,0.2)"/>
+                <polyline points="7,12 10,12 12,8 14,16 16,12 18,12" stroke="#38bdf8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+              <span class="logo-text-bold">WRT</span>
+            </div>
+            <span class="sidebar-mobile-title">MENU DIAGNOSTIK</span>
+          </div>
+          <button class="sidebar-close-btn" id="sidebarCloseBtn" aria-label="Tutup Menu">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+          </button>
+        </div>
+
         <div class="nav-section-title">DIAGNOSTIK & MONITOR</div>
         <ul class="nav-menu">
           <li class="nav-item">
             <button class="nav-link active" data-target="view-dashboard" id="navDashboard">
+              <svg class="nav-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 2a10 10 0 1 0 10 10"></path>
+                <path d="M12 12l5-3"></path>
+                <circle cx="12" cy="12" r="2"></circle>
+                <path d="M6 12a6 6 0 0 1 11.2-3"></path>
+              </svg>
               <span class="nav-label">Dashboard</span>
             </button>
           </li>
           <li class="nav-item">
             <button class="nav-link" data-target="view-livedata" id="navLiveData">
+              <svg class="nav-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+              </svg>
               <span class="nav-label">Live Telemetri</span>
               <span class="nav-badge" id="sensorCountBadge">14 Ch</span>
             </button>
           </li>
           <li class="nav-item">
             <button class="nav-link" data-target="view-dtc" id="navDtc">
+              <svg class="nav-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+                <line x1="12" y1="9" x2="12" y2="13"></line>
+                <line x1="12" y1="17" x2="12.01" y2="17"></line>
+              </svg>
               <span class="nav-label">DTC & Freeze Frame</span>
               <span class="nav-badge alert-badge" id="dtcAlertBadge">0 DTC</span>
             </button>
           </li>
           <li class="nav-item">
             <button class="nav-link highlight-nav" data-target="view-ai" id="navAi">
+              <svg class="nav-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 2l2.4 5.6L20 10l-4.4 3.8L16.8 20 12 16.6 7.2 20l1.2-6.2L4 10l5.6-2.4L12 2z"></path>
+              </svg>
               <span class="nav-label">3-Layer AI Studio</span>
               <span class="nav-badge ai-badge">AI 2.5</span>
             </button>
           </li>
           <li class="nav-item">
             <button class="nav-link" data-target="view-chat" id="navChat">
+              <svg class="nav-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                <circle cx="9" cy="10" r="1" fill="currentColor"></circle>
+                <circle cx="15" cy="10" r="1" fill="currentColor"></circle>
+              </svg>
               <span class="nav-label">Asisten WRT AI</span>
             </button>
           </li>
@@ -111,21 +183,40 @@
         <ul class="nav-menu">
           <li class="nav-item">
             <button class="nav-link" data-target="view-printer" id="navPrinter">
+              <svg class="nav-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="6 9 6 2 18 2 18 9"></polyline>
+                <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
+                <rect x="6" y="14" width="12" height="8"></rect>
+              </svg>
               <span class="nav-label">Cetak Struk Thermal</span>
             </button>
           </li>
           <li class="nav-item">
             <button class="nav-link" data-target="view-database" id="navDatabase">
+              <svg class="nav-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <ellipse cx="12" cy="5" rx="9" ry="3"></ellipse>
+                <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path>
+                <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path>
+              </svg>
               <span class="nav-label">Database ECU Honda</span>
             </button>
           </li>
           <li class="nav-item">
             <button class="nav-link" data-target="view-terminal" id="navTerminal">
+              <svg class="nav-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="4 17 10 11 4 5"></polyline>
+                <line x1="12" y1="19" x2="20" y2="19"></line>
+              </svg>
               <span class="nav-label">Terminal K-Line HEX</span>
             </button>
           </li>
           <li class="nav-item">
             <button class="nav-link" data-target="view-sessions" id="navSessions">
+              <svg class="nav-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path>
+                <rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect>
+                <polyline points="12 11 12 14 14 15"></polyline>
+              </svg>
               <span class="nav-label">Riwayat Servis</span>
             </button>
           </li>
@@ -133,7 +224,10 @@
 
         <!-- Bottom Hardware Info Card in Sidebar -->
         <div class="sidebar-hardware-box">
-          <div class="hw-title">ESP32 K-Line Adapter</div>
+          <div class="hw-title">
+            <span class="hw-status-dot"></span>
+            ESP32 K-Line Adapter
+          </div>
           <div class="hw-specs">
             <div><span>Opto:</span> <strong>4N35 Dual</strong></div>
             <div><span>Pin:</span> <strong>RX:16 | TX:17</strong></div>
@@ -1175,11 +1269,61 @@
       </main>
     </div>
 
+    <!-- Mobile Bottom Navigation Bar -->
+    <nav class="bottom-navbar" id="bottomNavbar" aria-label="Navigasi Cepat Mobile">
+      <button class="bottom-nav-item nav-link active" data-target="view-dashboard" aria-label="Dashboard">
+        <svg class="bottom-nav-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 2a10 10 0 1 0 10 10"></path>
+          <path d="M12 12l5-3"></path>
+          <circle cx="12" cy="12" r="2"></circle>
+          <path d="M6 12a6 6 0 0 1 11.2-3"></path>
+        </svg>
+        <span class="bottom-nav-label">Dashboard</span>
+      </button>
+
+      <button class="bottom-nav-item nav-link" data-target="view-livedata" aria-label="Live Telemetri">
+        <svg class="bottom-nav-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+        </svg>
+        <span class="bottom-nav-label">Live Data</span>
+      </button>
+
+      <button class="bottom-nav-item nav-link" data-target="view-dtc" aria-label="DTC & Kerusakan">
+        <div class="bottom-nav-badge-wrapper">
+          <svg class="bottom-nav-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+            <line x1="12" y1="9" x2="12" y2="13"></line>
+            <line x1="12" y1="17" x2="12.01" y2="17"></line>
+          </svg>
+          <span class="bottom-mini-badge" id="dtcAlertBadgeMini" style="display: none;">0</span>
+        </div>
+        <span class="bottom-nav-label">DTC</span>
+      </button>
+
+      <button class="bottom-nav-item nav-link highlight-bottom" data-target="view-ai" aria-label="3-Layer AI Studio">
+        <svg class="bottom-nav-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 2l2.4 5.6L20 10l-4.4 3.8L16.8 20 12 16.6 7.2 20l1.2-6.2L4 10l5.6-2.4L12 2z"></path>
+        </svg>
+        <span class="bottom-nav-label">AI Studio</span>
+      </button>
+
+      <button class="bottom-nav-item" id="bottomNavMenuBtn" aria-label="Semua Menu">
+        <svg class="bottom-nav-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="3" y1="12" x2="21" y2="12"></line>
+          <line x1="3" y1="6" x2="21" y2="6"></line>
+          <line x1="3" y1="18" x2="21" y2="18"></line>
+        </svg>
+        <span class="bottom-nav-label">Semua Menu</span>
+      </button>
+    </nav>
+
     <!-- Notification Toast Container -->
     <div id="toastContainer" class="toast-container"></div>
 
   </div>
 
+  <!-- Runtime Configuration & Application Logic -->
+  <script src="/config.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

@@ -42,6 +42,8 @@ services:
       RATE_LIMIT_MAX_REQUESTS: ${RATE_LIMIT_MAX_REQUESTS:-30}
     ports:
       - "3000:3000"
+    env_file:
+      - .env
 
 volumes:
   pgdata:

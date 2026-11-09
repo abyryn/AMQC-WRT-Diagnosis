@@ -9,12 +9,19 @@ const { v4: uuidv4 } = require('uuid');
 let pool = null;
 let isPostgresAvailable = false;
 
+const pgUser = process.env.POSTGRES_USER || 'wrt_user';
+const pgPass = process.env.POSTGRES_PASSWORD || 'wrt_secret';
+const pgHost = process.env.POSTGRES_HOST || 'localhost';
+const pgPort = process.env.POSTGRES_PORT || 5432;
+const pgDb = process.env.POSTGRES_DB || 'wrt_garage';
+const defaultDbUrl = `postgresql://${pgUser}:${encodeURIComponent(pgPass)}@${pgHost}:${pgPort}/${pgDb}`;
+
 try {
   pool = new Pool({
-    connectionString: process.env.DATABASE_URL || 'postgresql://wrt_user:wrt_secret@localhost:5432/wrt_garage',
-    max: 20,
-    idleTimeoutMillis: 30000,
-    connectionTimeoutMillis: 3000,
+    connectionString: process.env.DATABASE_URL || defaultDbUrl,
+    max: parseInt(process.env.DB_POOL_MAX) || 20,
+    idleTimeoutMillis: parseInt(process.env.DB_IDLE_TIMEOUT_MS) || 30000,
+    connectionTimeoutMillis: parseInt(process.env.DB_CONN_TIMEOUT_MS) || 3000,
   });
 
   pool.on('error', (err) => {

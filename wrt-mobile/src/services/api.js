@@ -2,11 +2,12 @@
 // WRT Garage — API Client Service
 // ============================================
 
-const API_BASE_URL = typeof window !== 'undefined' && window.location 
-  ? `http://${window.location.hostname}:3000/api` 
-  : 'http://localhost:3000/api';
+const envConfig = (typeof window !== 'undefined' && window.__ENV__) || {};
+const API_BASE_URL = envConfig.API_BASE_URL || (typeof window !== 'undefined' && window.location 
+  ? `${window.location.protocol}//${window.location.hostname}:3000/api` 
+  : 'http://localhost:3000/api');
 
-const API_KEY = 'wrt-garage-api-key-change-this-in-production';
+const API_KEY = envConfig.API_KEY || 'wrt-garage-api-key-change-this-in-production';
 
 export const apiClient = {
   baseUrl: API_BASE_URL,

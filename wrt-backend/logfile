@@ -1,8 +1,0 @@
-2026-11-05 22:35:44.917 WITA [31459] LOG:  starting PostgreSQL 18.6 on aarch64-unknown-linux-android, compiled by Android (16134705, +pgo, +bolt, +lto, +mlgo, based on r574158c) clang version 21.0.0 (https://android.googlesource.com/toolchain/llvm-project 9f872551d3c681d06fd303b36f16ed5c274735eb), 64-bit
-2026-11-05 22:35:44.918 WITA [31459] LOG:  listening on IPv4 address "127.0.0.1", port 5432
-2026-11-05 22:35:44.921 WITA [31459] LOG:  listening on Unix socket "/data/data/com.termux/files/usr/tmp/.s.PGSQL.5432"
-2026-11-05 22:35:44.931 WITA [31467] LOG:  database system was shut down at 2026-11-05 22:35:12 WITA
-2026-11-05 22:35:44.947 WITA [31459] LOG:  database system is ready to accept connections
-2026-11-05 22:40:45.030 WITA [31465] LOG:  checkpoint starting: time
-2026-11-05 22:40:47.127 WITA [31465] LOG:  checkpoint complete: wrote 20 buffers (0.1%), wrote 3 SLRU buffers; 0 WAL file(s) added, 0 removed, 0 recycled; write=2.030 s, sync=0.010 s, total=2.098 s; sync files=10, longest=0.003 s, average=0.001 s; distance=136 kB, estimate=136 kB; lsn=0/1787D40, redo lsn=0/1787CE8
-2026-11-05 22:43:27.558 WITA [2771] FATAL:  role "wrt_user" does not exist

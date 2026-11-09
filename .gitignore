@@ -12,3 +12,13 @@ yarn-error.log*
 # Operating System files
 .DS_Store
 Thumbs.db
+
+# Logs & Temporary files
+*.log
+logfile
+scratch/
+
+# Android build & cache
+.gradle/
+build/
+local.properties

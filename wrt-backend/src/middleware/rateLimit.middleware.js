@@ -17,13 +17,13 @@ const apiLimiter = rateLimit({
 
 // Stricter limit for AI endpoints (costs money per query)
 const aiLimiter = rateLimit({
-  windowMs: 60000,
-  max: 10,
+  windowMs: parseInt(process.env.AI_RATE_LIMIT_WINDOW_MS) || 60000,
+  max: parseInt(process.env.AI_RATE_LIMIT_MAX_REQUESTS) || 15,
   standardHeaders: true,
   legacyHeaders: false,
   message: {
     error: 'Too Many AI Requests',
-    message: 'Batas query AI tercapai. Maksimal 10 request per menit.',
+    message: 'Batas query AI tercapai. Silakan coba beberapa saat lagi.',
   },
 });
 

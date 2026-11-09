@@ -27,11 +27,11 @@ const PORT = process.env.PORT || 3000;
 // ============================================
 app.use(helmet());
 app.use(cors({
-  origin: '*', // In production, restrict to your mobile app's domain
+  origin: process.env.CORS_ORIGIN || '*',
   methods: ['GET', 'POST', 'PATCH', 'DELETE'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-API-Key'],
 }));
-app.use(express.json({ limit: '5mb' }));
+app.use(express.json({ limit: process.env.BODY_LIMIT || '5mb' }));
 app.use(morgan(process.env.NODE_ENV === 'production' ? 'combined' : 'dev'));
 app.use(apiLimiter);
 
@@ -114,7 +114,11 @@ async function start() {
   console.log('============================================');
   console.log(`  Environment : ${process.env.NODE_ENV || 'development'}`);
   console.log(`  Port        : ${PORT}`);
-  console.log(`  AI Provider : Google Gemini (${process.env.GEMINI_MODEL || 'gemini-3.5-flash'})`);
+  const aiProvider = (process.env.AI_PROVIDER || 'gemini').toLowerCase();
+  const activeModel = aiProvider === 'gemini'
+    ? (process.env.GEMINI_MODEL || 'Not Set in .env')
+    : (process.env.OPENROUTER_MODEL || process.env.AI_MODEL || 'Not Set in .env');
+  console.log(`  AI Provider : ${aiProvider.toUpperCase()} (${activeModel})`);
   console.log('============================================');
 
   // Test database connection
